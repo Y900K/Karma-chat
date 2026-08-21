@@ -1,0 +1,1 @@
+import {requirePersona} from "@/lib/auth/dal";export const dynamic="force-dynamic";export default async function AdminLayout({children}:{children:React.ReactNode}){await requirePersona("admin");return children}

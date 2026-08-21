@@ -1,0 +1,2 @@
+"use client";import {useEffect} from "react";import {usePathname} from "next/navigation";
+export default function AnalyticsProvider(){const pathname=usePathname();useEffect(()=>{if(!pathname)return;const controller=new AbortController();fetch("/api/events",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({event:"page_viewed",path:pathname,occurredAt:new Date().toISOString()}),keepalive:true,signal:controller.signal}).catch(()=>{});return()=>controller.abort()},[pathname]);return null}
