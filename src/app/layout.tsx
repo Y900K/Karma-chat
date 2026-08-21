@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AnalyticsProvider from "@/components/analytics-provider";
 import WebVitals from "@/components/web-vitals";
+import { getSiteUrl } from "@/lib/site-url";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KarmaSetu AI | कौशल से करियर तक",
   description: "India's employability intelligence platform—turning learner potential into verified skills, better matches and meaningful work.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: new URL(getSiteUrl()),
   openGraph: { title: "KarmaSetu AI", description: "Talent is everywhere. Opportunity should find it.", type: "website" },
 };
 

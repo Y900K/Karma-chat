@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, Bell, BookOpen, BrainCircuit, BriefcaseBusiness, Check, ChevronRight, CircleUserRound, FileBadge2, Home, Languages, LogOut, MessageCircleMore, Play, Search, Settings, Sparkles, Target, Trophy, Upload, Zap } from "lucide-react";
+import { Activity, ArrowRight, Bell, BookOpen, BrainCircuit, BriefcaseBusiness, Check, ChevronRight, CircleUserRound, FileBadge2, Home, Languages, LogOut, MessageCircleMore, Play, Search, Settings, Sparkles, Trophy, Upload, Zap } from "lucide-react";
 import "./dashboard.css";
 
 type Lang = "en" | "hi";

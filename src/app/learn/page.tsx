@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, ChevronDown, CirclePlay, Clock3, Download, ExternalLink, FileText, Languages, Lightbulb, ListChecks, LockKeyhole, Menu, MessageCircleMore, Play, ShieldCheck, Sparkles, Trophy, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, ChevronDown, CirclePlay, Download, ExternalLink, FileText, Languages, Lightbulb, ListChecks, LockKeyhole, Menu, MessageCircleMore, Play, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import { completeLesson } from "@/app/actions/learner";
 import "./learn.css";
 

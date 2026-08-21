@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent,useState } from "react";
 import Link from "next/link";
-import { Accessibility, ArrowRight, BarChart3, BookOpen, Bot, Building2, CheckCircle2, ChevronDown, ExternalLink, FileText, Languages, LifeBuoy, LockKeyhole, Mail, Scale, Send, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowRight, BarChart3, Bot, Building2, CheckCircle2, ChevronDown, ExternalLink, FileText, Languages, LifeBuoy, LockKeyhole, Mail, Scale, Send, ShieldCheck, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import "./trust.css";
 

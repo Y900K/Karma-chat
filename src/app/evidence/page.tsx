@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, ArrowRight, Camera, Check, CheckCircle2, ChevronRight, CircleDashed, Clock3, FileImage, FileText, Languages, Lightbulb, LockKeyhole, Paperclip, RotateCcw, ShieldCheck, Sparkles, UploadCloud, Video, Wrench } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, CheckCircle2, ChevronRight, CircleDashed, Clock3, FileImage, FileText, Languages, Lightbulb, LockKeyhole, Paperclip, RotateCcw, ShieldCheck, Sparkles, UploadCloud, Video, Wrench } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { saveEvidenceMetadata } from "@/app/actions/learner";
 import "./evidence.css";

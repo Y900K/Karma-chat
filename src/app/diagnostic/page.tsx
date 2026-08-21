@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BrainCircuit, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, Languages, Lightbulb, RotateCcw, ShieldCheck, Sparkles, Target, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, BrainCircuit, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, Languages, Lightbulb, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
 import { saveDiagnostic } from "@/app/actions/learner";
 import "./diagnostic.css";
 

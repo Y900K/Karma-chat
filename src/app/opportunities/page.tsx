@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, IndianRupee, Languages, LockKeyhole, MapPin, Search, ShieldCheck, SlidersHorizontal, Sparkles, Target, TrainFront, TriangleAlert, Users, Wrench, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, ChevronRight, CircleHelp, Clock3, IndianRupee, Languages, LockKeyhole, MapPin, Search, ShieldCheck, SlidersHorizontal, Sparkles, Target, TrainFront, TriangleAlert, Wrench, X } from "lucide-react";
 import { submitApplication } from "@/app/actions/learner";
 import "./opportunities.css";
 

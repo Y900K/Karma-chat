@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, BarChart3, Bell, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronDown, CircleUserRound, ClipboardCheck, Download, FileBadge2, Filter, GraduationCap, Languages, LayoutDashboard, LockKeyhole, MessageSquareMore, Search, Settings, ShieldCheck, Sparkles, Target, TrendingUp, UserCheck, Users, Wrench } from "lucide-react";
+import { ArrowRight, BarChart3, Bell, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronDown, CircleUserRound, Download, FileBadge2, Filter, GraduationCap, Languages, LayoutDashboard, LockKeyhole, Search, Settings, ShieldCheck, Sparkles, Target, TrendingUp, Users, Wrench } from "lucide-react";
 import "./institute.css";
 
 type Lang="en"|"hi";

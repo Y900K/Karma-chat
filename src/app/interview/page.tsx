@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BrainCircuit, Check, CheckCircle2, ChevronRight, CircleUserRound, Clock3, Headphones, Languages, Lightbulb, LoaderCircle, MessageSquareText, RefreshCw, ShieldCheck, Sparkles, Target, Trophy, Volume2, Wrench } from "lucide-react";
+import { ArrowRight, BrainCircuit, Check, CheckCircle2, ChevronRight, Clock3, Languages, Lightbulb, LoaderCircle, MessageSquareText, RefreshCw, ShieldCheck, Sparkles, Target, Trophy, Volume2 } from "lucide-react";
 import { completeInterview } from "@/app/actions/learner";
 import "./interview.css";
 
