@@ -56,20 +56,19 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user && isProtected) {
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  const userId = claimsError ? null : claimsData?.claims?.sub;
+  if (!userId && isProtected) {
     const login = request.nextUrl.clone();
     login.pathname = "/auth";
     login.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(login);
   }
-  if (user && request.nextUrl.pathname === "/auth") {
+  if (userId && request.nextUrl.pathname === "/auth") {
     const { data: account } = await supabase
       .from("user_accounts")
       .select("persona,status")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
     const destination = account?.status === "active" ? personaHome[account.persona] : null;
     return NextResponse.redirect(new URL(destination || "/dashboard", request.url));

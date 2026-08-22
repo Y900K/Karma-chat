@@ -79,6 +79,15 @@ test("password login establishes the SSR session before navigation", async () =>
   assert.doesNotMatch(authPage, /router\.push\(destinations/);
 });
 
+test("protected navigation verifies cached JWT claims instead of repeating user lookups", async () => {
+  const proxy = await readFile(join(root, "src/proxy.ts"), "utf8");
+  const dal = await readFile(join(root, "src/lib/auth/dal.ts"), "utf8");
+  assert.match(proxy, /auth\.getClaims\(\)/);
+  assert.match(dal, /auth\.getClaims\(\)/);
+  assert.doesNotMatch(proxy, /auth\.getUser\(\)/);
+  assert.doesNotMatch(dal, /auth\.getUser\(\)/);
+});
+
 test("live dashboards expose role-scoped DTOs", async () => {
   const route = await readFile(
     join(root, "src/app/api/dashboard/route.ts"),

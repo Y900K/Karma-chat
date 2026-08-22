@@ -31,21 +31,19 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
       };
     return null;
   }
-  const {
-    data: { user },
-    error,
-  } = await sb.auth.getUser();
-  if (error || !user) return null;
+  const { data, error } = await sb.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims?.sub) return null;
   const { data: account } = await sb
     .from("user_accounts")
     .select("persona,status")
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .maybeSingle();
   if (account?.status && account.status !== "active")
     throw new AuthError("Account is not active", 403);
   return {
-    id: user.id,
-    email: user.email ?? null,
+    id: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : null,
     persona: (account?.persona ?? "learner") as Persona,
     demo: false,
   };

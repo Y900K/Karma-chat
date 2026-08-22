@@ -16,5 +16,14 @@ test("learner session survives protected sidebar navigation",async({page})=>{
   await page.locator('input[name="password"]').fill(password!);
   await page.getByRole("button",{name:/sign in/i}).click();
   await page.waitForURL("**/dashboard",{timeout:20_000});
-  for(const route of ["/portfolio","/learn","/evidence","/interview","/opportunities","/settings","/notifications"]){await page.goto(route);await expect(page).not.toHaveURL(/\/auth(?:\?|$)/);await expect(page.locator("body")).toBeVisible()}
+  await page.getByLabel("Search roles and skills").fill("learning");
+  await page.getByLabel("Search roles and skills").press("Enter");
+  await expect(page).toHaveURL(/\/learn$/);
+  const routes=["/portfolio","/learn","/evidence","/interview","/opportunities","/settings","/notifications"];
+  for(let round=1;round<=3;round++)for(const route of routes)await test.step(`navigation round ${round}: ${route}`,async()=>{
+    const response=await page.goto(route);
+    expect(response?.status()).toBeLessThan(500);
+    await expect(page).not.toHaveURL(/\/auth(?:\?|$)/);
+    await expect(page.locator("body")).toBeVisible();
+  });
 });
