@@ -9,12 +9,13 @@ if (!['seed', 'cleanup'].includes(mode) || !process.argv.includes('--confirm')) 
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !key) throw new Error('Supabase audit credentials are not configured');
+const publicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+if (!url || !key || !publicKey) throw new Error('Supabase audit credentials are not configured');
 
 const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 const tag = 'ks-audit-20260821';
-const password = `Karma-Audit-${randomBytes(12).toString('base64url')}!A1`;
 const personas = ['learner', 'institute', 'employer', 'government', 'admin'];
+const passwords = Object.fromEntries(personas.map((persona) => [persona, `Karma-${persona}-${randomBytes(12).toString('base64url')}!A1`]));
 const emails = Object.fromEntries(personas.map((persona) => [persona, `${tag}-${persona}@example.com`]));
 
 function must(result, context) {
@@ -77,7 +78,7 @@ async function createUser(persona) {
   const data = must(
     await supabase.auth.admin.createUser({
       email: emails[persona],
-      password,
+      password: passwords[persona],
       email_confirm: true,
       user_metadata: { persona, display_name: `Audit ${persona}` },
     }),
@@ -160,7 +161,19 @@ async function seed() {
   must(await supabase.from('feature_flags').insert({ key: `${tag}-flag`, description: 'Temporary audit fixture', enabled: true, rollout_percent: 10, risk_tier: 'low', updated_by: users.admin.id }), 'create feature flag');
   must(await supabase.from('prompt_versions').insert({ prompt_key: `${tag}-prompt`, version: '1.0', system_template: 'Audit only', input_schema: {}, output_schema: {}, model_key: `${tag}-model`, status: 'production', created_by: users.admin.id, approved_by: users.admin.id }), 'create prompt');
 
-  console.log(JSON.stringify({ ok: true, mode: 'seed', password, emails }));
+  const verification = {};
+  for (const persona of personas) {
+    const client = createClient(url, publicKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const session = must(await client.auth.signInWithPassword({ email: emails[persona], password: passwords[persona] }), `sign in ${persona}`);
+    const account = must(await client.from('user_accounts').select('persona,status').eq('user_id', session.user.id).single(), `read ${persona} account`);
+    if (account.persona !== persona || account.status !== 'active') throw new Error(`${persona} account scope mismatch`);
+    const membershipTable = persona === 'institute' ? 'organization_memberships' : persona === 'employer' ? 'employer_memberships' : persona === 'government' ? 'program_memberships' : null;
+    const membership = membershipTable ? must(await client.from(membershipTable).select('status').eq('user_id', session.user.id).eq('status', 'active'), `read ${persona} membership`) : [];
+    if (membershipTable && membership.length !== 1) throw new Error(`${persona} membership missing`);
+    verification[persona] = { authenticated: true, persona: account.persona, membership: membershipTable ? 'active' : 'not_required' };
+    await client.auth.signOut();
+  }
+  console.log(JSON.stringify({ ok: true, mode: 'seed', credentials: Object.fromEntries(personas.map((persona) => [persona, { email: emails[persona], password: passwords[persona] }])), verification }));
 }
 
 if (mode === 'seed') await seed();
