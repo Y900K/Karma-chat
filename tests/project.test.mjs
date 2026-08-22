@@ -306,6 +306,7 @@ test("workspace navigation has unique destinations and learner escape routes", a
   assert.match(utility, /export function WorkspaceSectionLink/);
   assert.match(utility, /aria-current/);
   assert.match(utility, /export function LearnerReturnLink/);
+  assert.match(utility, /aria-label="Back to dashboard"/);
   for (const route of ["institute", "employer", "governance", "admin"]) {
     const page = await readFile(
       join(root, `src/app/${route}/page.tsx`),

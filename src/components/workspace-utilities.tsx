@@ -169,7 +169,11 @@ export function WorkspaceSectionLink({
 
 export function LearnerReturnLink({ label = "Dashboard" }: { label?: string }) {
   return (
-    <Link className="learner-return-link" href="/dashboard">
+    <Link
+      aria-label="Back to dashboard"
+      className="learner-return-link"
+      href="/dashboard"
+    >
       <ArrowLeft />
       <LayoutDashboard />
       <span>{label}</span>
