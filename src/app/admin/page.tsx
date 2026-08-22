@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   FileQuestion,
   Film,
-  Flag,
   Languages,
   LayoutDashboard,
   Library,
@@ -25,7 +24,13 @@ import {
 } from "lucide-react";
 import "./admin.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
-import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
+import {
+  useWorkspaceLanguage,
+  WorkspaceHeaderLink,
+  WorkspaceSearch,
+  WorkspaceSectionLink,
+  WorkspaceSignOut,
+} from "@/components/workspace-utilities";
 
 const queue = [
   {
@@ -71,7 +76,7 @@ const partners = [
   },
 ];
 export default function Admin() {
-  const {lang,toggleLanguage}=useWorkspaceLanguage();
+  const { lang, toggleLanguage } = useWorkspaceLanguage();
   const c =
     lang === "en"
       ? {
@@ -98,27 +103,24 @@ export default function Admin() {
         </Link>
         <nav>
           {[
-            [LayoutDashboard, "Command center","admin-overview"],
-            [Library, "Content registry","admin-content"],
-            [FileQuestion, "Question bank","admin-content"],
-            [Languages, "Translations","admin-content"],
-            [Building2, "Partner verification","admin-partners"],
-            [Bot, "AI prompts & evals","admin-ai"],
-            [Flag, "Moderation","admin-content"],
-            [ToggleRight, "Feature flags","admin-flags"],
-            [Activity, "System health","admin-health"],
-          ].map(([Icon, label,target], i) => {
+            [LayoutDashboard, "Command center", "admin-overview"],
+            [Library, "Content operations", "admin-content"],
+            [Building2, "Partner verification", "admin-partners"],
+            [Bot, "AI prompts & evals", "admin-ai"],
+            [ToggleRight, "Feature flags", "admin-flags"],
+            [Activity, "System health", "admin-health"],
+          ].map(([Icon, label, target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
-              <a
-                className={i === 0 ? "active" : ""}
+              <WorkspaceSectionLink
                 href={`#${String(target)}`}
+                overview={i === 0}
                 key={String(label)}
               >
                 <I />
                 {String(label)}
-                {i === 6 && <em>4</em>}
-              </a>
+                {i === 1 && <em>4</em>}
+              </WorkspaceSectionLink>
             );
           })}
         </nav>
@@ -127,7 +129,7 @@ export default function Admin() {
             <Settings />
             Platform settings
           </Link>
-          <WorkspaceSignOut/>
+          <WorkspaceSignOut />
           <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
@@ -139,13 +141,34 @@ export default function Admin() {
       </aside>
       <section className="adm-main">
         <header>
-          <WorkspaceSearch placeholder="Search content, partner or incident…" targets={{"content|question|translation|moderation":"admin-content","partner|verification":"admin-partners","prompt|model|ai|eval":"admin-ai","flag|rollout":"admin-flags","health|incident|system":"admin-health"}}/>
+          <WorkspaceSearch
+            placeholder="Search content, partner or incident…"
+            targets={{
+              "content|question|translation|moderation": "admin-content",
+              "partner|verification": "admin-partners",
+              "prompt|model|ai|eval": "admin-ai",
+              "flag|rollout": "admin-flags",
+              "health|incident|system": "admin-health",
+            }}
+          />
           <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <WorkspaceHeaderLink href="/workspace/notifications" label="Admin notifications" className="adm-bell"><Bell/><i/></WorkspaceHeaderLink>
-          <WorkspaceHeaderLink href="/workspace/settings" label="Admin account settings"><CircleUserRound/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/notifications"
+            label="Admin notifications"
+            className="adm-bell"
+          >
+            <Bell />
+            <i />
+          </WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/settings"
+            label="Admin account settings"
+          >
+            <CircleUserRound />
+          </WorkspaceHeaderLink>
         </header>
         <div className="adm-content" id="admin-overview">
           <div className="adm-welcome">
@@ -179,21 +202,51 @@ export default function Admin() {
           </div>
           <div className="adm-kpis">
             {[
-              [Library, "Published resources", "186", "12 need review soon", "admin-content"],
-              [Languages, "Translation coverage", "91%", "English + Hinglish", "admin-content"],
-              [Building2, "Verified partners", "24", "3 awaiting checks", "admin-partners"],
-              [Activity, "Services healthy", "8/8", "No active outage", "admin-health"],
+              [
+                Library,
+                "Published resources",
+                "186",
+                "12 need review soon",
+                "admin-content",
+              ],
+              [
+                Languages,
+                "Translation coverage",
+                "91%",
+                "English + Hinglish",
+                "admin-content",
+              ],
+              [
+                Building2,
+                "Verified partners",
+                "24",
+                "3 awaiting checks",
+                "admin-partners",
+              ],
+              [
+                Activity,
+                "Services healthy",
+                "8/8",
+                "No active outage",
+                "admin-health",
+              ],
             ].map(([Icon, label, value, note, target]) => {
               const I = Icon as typeof Library;
               return (
-                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
-                  <div>
-                    <I />
-                    <span>{String(label)}</span>
-                  </div>
-                  <b>{String(value)}</b>
-                  <small>{String(note)}</small>
-                </article></a>
+                <a
+                  className="workspace-kpi"
+                  href={`#${String(target)}`}
+                  key={String(label)}
+                >
+                  <article>
+                    <div>
+                      <I />
+                      <span>{String(label)}</span>
+                    </div>
+                    <b>{String(value)}</b>
+                    <small>{String(note)}</small>
+                  </article>
+                </a>
               );
             })}
           </div>

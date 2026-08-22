@@ -1,3 +1,271 @@
-"use client";import {useState} from "react";import Link from "next/link";import {ArrowRight,Bell,CalendarClock,Check,ChevronLeft,ChevronRight,Clock3,Languages,MapPin,Plus,ShieldCheck,Video} from "lucide-react";import "../product-workspace.css";import "./schedule.css";
-const events=[{day:24,time:"11:30",title:"Shakti Auto · Technical interview",type:"video"},{day:26,time:"15:00",title:"Evidence clinic · Motor controls",type:"support"},{day:29,time:"10:00",title:"Apex Fabrication · HR discussion",type:"video"}];
-export default function Schedule(){const[lang,setLang]=useState<"en"|"hi">("en"),[selected,setSelected]=useState(24),[modal,setModal]=useState(false),[confirmed,setConfirmed]=useState(false);return <main className="pw"><header className="pw-head"><Link className="pw-brand" href="/"><span>क</span><div>KarmaSetu <b>AI</b><small>MY SCHEDULE</small></div></Link><Link href="/interview">Practice interview</Link><button onClick={()=>setLang(lang==="en"?"hi":"en")}><Languages/>{lang==="en"?"हिंदी + EN":"EN + हिंदी"}</button></header><section className="pw-main"><div className="pw-title"><div><p>INTERVIEWS & SUPPORT</p><h1>{lang==="en"?"Be ready at the right time.":"सही समय पर पूरी तरह ready रहें।"}</h1><span>All times shown in Asia/Kolkata (IST). Changes notify every participant.</span></div><button className="pw-primary" onClick={()=>setModal(true)}><Plus/>Add availability</button></div><div className="schedule-grid"><article className="pw-card calendar"><div className="cal-head"><button><ChevronLeft/></button><h2>August 2026</h2><button><ChevronRight/></button></div><div className="week">{["MON","TUE","WED","THU","FRI","SAT","SUN"].map(x=><span key={x}>{x}</span>)}</div><div className="days">{Array.from({length:35},(_,i)=>i<5?null:i-4).map((d,i)=><button key={i} disabled={!d||d>30} className={d===selected?"selected":events.some(x=>x.day===d)?"has":""} onClick={()=>d&&d<=30&&setSelected(d)}>{d&&d<=30?d:""}{events.some(x=>x.day===d)&&<i/>}</button>)}</div><div className="pw-note"><ShieldCheck/>Employers see only the availability windows you choose—not your full calendar.</div></article><aside className="pw-card day-view"><div className="pw-card-head"><div><p className="eyebrow">SELECTED DAY</p><h2>Monday, {selected} August</h2></div><CalendarClock/></div>{events.filter(x=>x.day===selected).map(x=><div className="event" key={x.title}><i><Video/></i><p><b>{x.title}</b><span><Clock3/>{x.time}–12:00 IST · 30 min</span><small><MapPin/>Secure video room</small></p><em>Confirmed</em></div>)}{!events.some(x=>x.day===selected)&&<div className="pw-empty"><CalendarClock/><b>No event scheduled</b><span>Add an availability window for employers or support staff.</span></div>}<button className="availability" onClick={()=>setModal(true)}><Plus/>Add availability on this day</button></aside><article className="pw-card upcoming"><div className="pw-card-head"><div><p className="eyebrow">NEXT INTERVIEW</p><h2>Shakti Auto Components</h2></div><em className="pw-tag">Confirmed</em></div><div className="next-time"><div><b>24</b><span>AUG</span></div><p><b>Technical interview · Junior Industrial Electrician</b><span>Monday · 11:30 AM IST · 30 minutes</span></p><Video/></div><div className="reminders"><Bell/><p><b>Reminder plan</b><span>Email: 24h + 1h before · In-app: 24h + 15m before</span></p><Check/></div><div className="prep-actions"><Link href="/interview">Practice likely questions<ArrowRight/></Link><button>Request reschedule</button></div></article><article className="pw-card availability-card"><div className="pw-card-head"><div><p className="eyebrow">YOUR AVAILABILITY</p><h2>Recurring windows</h2></div><button>Edit</button></div>{[["Monday","10:00–16:00"],["Wednesday","14:00–18:00"],["Friday","10:00–13:00"]].map(([d,t])=><div className="window" key={d}><Check/><b>{d}</b><span>{t}</span><small>IST</small></div>)}<div className="pw-note"><Clock3/>A 30-minute buffer is automatically held between interviews.</div></article></div></section>{modal&&<div className="pw-modal"><div><h2>Add availability</h2><label>Date<input type="date" defaultValue="2026-08-25"/></label><div className="two"><label>From<input type="time" defaultValue="10:00"/></label><label>To<input type="time" defaultValue="16:00"/></label></div><label>Repeat<select><option>Does not repeat</option><option>Weekly for 4 weeks</option></select></label><footer><button onClick={()=>setModal(false)}>Cancel</button><button onClick={()=>{setConfirmed(true);setModal(false)}}>{confirmed?"Saved":"Save availability"}</button></footer></div></div>}</main>}
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Bell,
+  CalendarClock,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Languages,
+  MapPin,
+  Plus,
+  ShieldCheck,
+  Video,
+} from "lucide-react";
+import "../product-workspace.css";
+import "./schedule.css";
+import { LearnerReturnLink } from "@/components/workspace-utilities";
+const events = [
+  {
+    day: 24,
+    time: "11:30",
+    title: "Shakti Auto · Technical interview",
+    type: "video",
+  },
+  {
+    day: 26,
+    time: "15:00",
+    title: "Evidence clinic · Motor controls",
+    type: "support",
+  },
+  {
+    day: 29,
+    time: "10:00",
+    title: "Apex Fabrication · HR discussion",
+    type: "video",
+  },
+];
+export default function Schedule() {
+  const [lang, setLang] = useState<"en" | "hi">("en"),
+    [selected, setSelected] = useState(24),
+    [modal, setModal] = useState(false),
+    [confirmed, setConfirmed] = useState(false);
+  return (
+    <main className="pw">
+      <header className="pw-head">
+        <Link className="pw-brand" href="/">
+          <span>क</span>
+          <div>
+            KarmaSetu <b>AI</b>
+            <small>MY SCHEDULE</small>
+          </div>
+        </Link>
+        <LearnerReturnLink />
+        <Link href="/interview">Practice interview</Link>
+        <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+          <Languages />
+          {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
+        </button>
+      </header>
+      <section className="pw-main">
+        <div className="pw-title">
+          <div>
+            <p>INTERVIEWS & SUPPORT</p>
+            <h1>
+              {lang === "en"
+                ? "Be ready at the right time."
+                : "सही समय पर पूरी तरह ready रहें।"}
+            </h1>
+            <span>
+              All times shown in Asia/Kolkata (IST). Changes notify every
+              participant.
+            </span>
+          </div>
+          <button className="pw-primary" onClick={() => setModal(true)}>
+            <Plus />
+            Add availability
+          </button>
+        </div>
+        <div className="schedule-grid">
+          <article className="pw-card calendar">
+            <div className="cal-head">
+              <button>
+                <ChevronLeft />
+              </button>
+              <h2>August 2026</h2>
+              <button>
+                <ChevronRight />
+              </button>
+            </div>
+            <div className="week">
+              {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((x) => (
+                <span key={x}>{x}</span>
+              ))}
+            </div>
+            <div className="days">
+              {Array.from({ length: 35 }, (_, i) => (i < 5 ? null : i - 4)).map(
+                (d, i) => (
+                  <button
+                    key={i}
+                    disabled={!d || d > 30}
+                    className={
+                      d === selected
+                        ? "selected"
+                        : events.some((x) => x.day === d)
+                          ? "has"
+                          : ""
+                    }
+                    onClick={() => d && d <= 30 && setSelected(d)}
+                  >
+                    {d && d <= 30 ? d : ""}
+                    {events.some((x) => x.day === d) && <i />}
+                  </button>
+                ),
+              )}
+            </div>
+            <div className="pw-note">
+              <ShieldCheck />
+              Employers see only the availability windows you choose—not your
+              full calendar.
+            </div>
+          </article>
+          <aside className="pw-card day-view">
+            <div className="pw-card-head">
+              <div>
+                <p className="eyebrow">SELECTED DAY</p>
+                <h2>Monday, {selected} August</h2>
+              </div>
+              <CalendarClock />
+            </div>
+            {events
+              .filter((x) => x.day === selected)
+              .map((x) => (
+                <div className="event" key={x.title}>
+                  <i>
+                    <Video />
+                  </i>
+                  <p>
+                    <b>{x.title}</b>
+                    <span>
+                      <Clock3 />
+                      {x.time}–12:00 IST · 30 min
+                    </span>
+                    <small>
+                      <MapPin />
+                      Secure video room
+                    </small>
+                  </p>
+                  <em>Confirmed</em>
+                </div>
+              ))}
+            {!events.some((x) => x.day === selected) && (
+              <div className="pw-empty">
+                <CalendarClock />
+                <b>No event scheduled</b>
+                <span>
+                  Add an availability window for employers or support staff.
+                </span>
+              </div>
+            )}
+            <button className="availability" onClick={() => setModal(true)}>
+              <Plus />
+              Add availability on this day
+            </button>
+          </aside>
+          <article className="pw-card upcoming">
+            <div className="pw-card-head">
+              <div>
+                <p className="eyebrow">NEXT INTERVIEW</p>
+                <h2>Shakti Auto Components</h2>
+              </div>
+              <em className="pw-tag">Confirmed</em>
+            </div>
+            <div className="next-time">
+              <div>
+                <b>24</b>
+                <span>AUG</span>
+              </div>
+              <p>
+                <b>Technical interview · Junior Industrial Electrician</b>
+                <span>Monday · 11:30 AM IST · 30 minutes</span>
+              </p>
+              <Video />
+            </div>
+            <div className="reminders">
+              <Bell />
+              <p>
+                <b>Reminder plan</b>
+                <span>Email: 24h + 1h before · In-app: 24h + 15m before</span>
+              </p>
+              <Check />
+            </div>
+            <div className="prep-actions">
+              <Link href="/interview">
+                Practice likely questions
+                <ArrowRight />
+              </Link>
+              <button>Request reschedule</button>
+            </div>
+          </article>
+          <article className="pw-card availability-card">
+            <div className="pw-card-head">
+              <div>
+                <p className="eyebrow">YOUR AVAILABILITY</p>
+                <h2>Recurring windows</h2>
+              </div>
+              <button>Edit</button>
+            </div>
+            {[
+              ["Monday", "10:00–16:00"],
+              ["Wednesday", "14:00–18:00"],
+              ["Friday", "10:00–13:00"],
+            ].map(([d, t]) => (
+              <div className="window" key={d}>
+                <Check />
+                <b>{d}</b>
+                <span>{t}</span>
+                <small>IST</small>
+              </div>
+            ))}
+            <div className="pw-note">
+              <Clock3 />A 30-minute buffer is automatically held between
+              interviews.
+            </div>
+          </article>
+        </div>
+      </section>
+      {modal && (
+        <div className="pw-modal">
+          <div>
+            <h2>Add availability</h2>
+            <label>
+              Date
+              <input type="date" defaultValue="2026-08-25" />
+            </label>
+            <div className="two">
+              <label>
+                From
+                <input type="time" defaultValue="10:00" />
+              </label>
+              <label>
+                To
+                <input type="time" defaultValue="16:00" />
+              </label>
+            </div>
+            <label>
+              Repeat
+              <select>
+                <option>Does not repeat</option>
+                <option>Weekly for 4 weeks</option>
+              </select>
+            </label>
+            <footer>
+              <button onClick={() => setModal(false)}>Cancel</button>
+              <button
+                onClick={() => {
+                  setConfirmed(true);
+                  setModal(false);
+                }}
+              >
+                {confirmed ? "Saved" : "Save availability"}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

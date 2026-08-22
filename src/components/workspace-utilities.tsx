@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Search } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, LogOut, Search } from "lucide-react";
 import "./workspace-utilities.css";
 
 export function WorkspaceSearch({
@@ -26,8 +26,9 @@ export function WorkspaceSearch({
                 value.trim().toLowerCase().includes(keyword),
             ),
         )
-        .filter((entry, index, all) =>
-          all.findIndex((candidate) => candidate[1] === entry[1]) === index,
+        .filter(
+          (entry, index, all) =>
+            all.findIndex((candidate) => candidate[1] === entry[1]) === index,
         )
         .slice(0, 4)
     : [];
@@ -42,7 +43,9 @@ export function WorkspaceSearch({
     );
     if (!target) return;
     target.scrollIntoView({ behavior: "smooth", block: "start" });
-    router.push(`${window.location.pathname}${window.location.search}#${target.id}`);
+    router.push(
+      `${window.location.pathname}${window.location.search}#${target.id}`,
+    );
     target.setAttribute("tabindex", "-1");
     target.focus({ preventScroll: true });
   };
@@ -59,11 +62,18 @@ export function WorkspaceSearch({
       </label>
       {value.trim() ? (
         <div className="workspace-search-results" aria-live="polite">
-          {suggestions.length ? suggestions.map(([keywords, target]) => (
-            <a href={`#${target}`} key={target} onClick={() => setValue("")}>
-              Open {keywords.split("|")[0]} section
-            </a>
-          )) : <span>No matching workspace section. Try a role, learner, job, evidence or report keyword.</span>}
+          {suggestions.length ? (
+            suggestions.map(([keywords, target]) => (
+              <a href={`#${target}`} key={target} onClick={() => setValue("")}>
+                Open {keywords.split("|")[0]} section
+              </a>
+            ))
+          ) : (
+            <span>
+              No matching workspace section. Try a role, learner, job, evidence
+              or report keyword.
+            </span>
+          )}
         </div>
       ) : null}
       <button className="workspace-search-submit" type="submit">
@@ -123,6 +133,46 @@ export function WorkspaceHeaderLink({
       aria-label={label}
     >
       {children}
+    </Link>
+  );
+}
+
+export function WorkspaceSectionLink({
+  href,
+  children,
+  overview = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  overview?: boolean;
+}) {
+  const [active, setActive] = useState(overview);
+  useEffect(() => {
+    const updateFromHash = () =>
+      setActive(
+        window.location.hash === href || (!window.location.hash && overview),
+      );
+    updateFromHash();
+    window.addEventListener("hashchange", updateFromHash);
+    return () => window.removeEventListener("hashchange", updateFromHash);
+  }, [href, overview]);
+  return (
+    <a
+      className={active ? "active" : ""}
+      href={href}
+      aria-current={active ? "location" : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
+export function LearnerReturnLink({ label = "Dashboard" }: { label?: string }) {
+  return (
+    <Link className="learner-return-link" href="/dashboard">
+      <ArrowLeft />
+      <LayoutDashboard />
+      <span>{label}</span>
     </Link>
   );
 }

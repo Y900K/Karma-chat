@@ -2,22 +2,499 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, Check, CheckCircle2, ChevronRight, CircleDashed, Clock3, FileImage, FileText, Languages, Lightbulb, LockKeyhole, Paperclip, RotateCcw, ShieldCheck, Sparkles, UploadCloud, Video, Wrench } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  CircleDashed,
+  Clock3,
+  FileImage,
+  FileText,
+  Languages,
+  Lightbulb,
+  LockKeyhole,
+  Paperclip,
+  RotateCcw,
+  ShieldCheck,
+  Sparkles,
+  UploadCloud,
+  Video,
+  Wrench,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { saveEvidenceMetadata } from "@/app/actions/learner";
+import { LearnerReturnLink } from "@/components/workspace-utilities";
 import "./evidence.css";
 
-type Lang="en"|"hi"; type UploadItem={file:File;status:"ready"|"uploading"|"done"|"error"};
-const allowed=["application/pdf","image/jpeg","image/png","video/mp4"];
-const rubric=[{title:"Safe working method",desc:"Isolation, PPE and safe sequence are visible",weight:30},{title:"Circuit accuracy",desc:"Connections match the supplied control drawing",weight:30},{title:"Workmanship",desc:"Routing, terminations and labeling are clear",weight:25},{title:"Explanation",desc:"You can explain decisions and testing",weight:15}];
+type Lang = "en" | "hi";
+type UploadItem = {
+  file: File;
+  status: "ready" | "uploading" | "done" | "error";
+};
+const allowed = ["application/pdf", "image/jpeg", "image/png", "video/mp4"];
+const rubric = [
+  {
+    title: "Safe working method",
+    desc: "Isolation, PPE and safe sequence are visible",
+    weight: 30,
+  },
+  {
+    title: "Circuit accuracy",
+    desc: "Connections match the supplied control drawing",
+    weight: 30,
+  },
+  {
+    title: "Workmanship",
+    desc: "Routing, terminations and labeling are clear",
+    weight: 25,
+  },
+  {
+    title: "Explanation",
+    desc: "You can explain decisions and testing",
+    weight: 15,
+  },
+];
 
-export default function Evidence(){const[lang,setLang]=useState<Lang>("en"),[files,setFiles]=useState<UploadItem[]>([]),[description,setDescription]=useState(""),[confirm,setConfirm]=useState(false),[submitted,setSubmitted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(""),[uploadsEnabled,setUploadsEnabled]=useState(false),[uploadReason,setUploadReason]=useState("Checking pilot upload safety…");const input=useRef<HTMLInputElement>(null);
- useEffect(()=>{void(async()=>{try{const response=await fetch("/api/capabilities",{cache:"no-store"});const body=await response.json();setUploadsEnabled(Boolean(body.evidenceUploads));setUploadReason(body.evidenceReason??"")}catch{setUploadReason("Evidence upload safety status is unavailable.")}})()},[]);
- const addFiles=(list:FileList|null)=>{if(!list)return;setError("");const next=Array.from(list).filter(f=>{if(!allowed.includes(f.type)){setError("Only PDF, JPG, PNG and MP4 files are supported.");return false}if(f.size>10*1024*1024){setError("Each file must be 10 MB or smaller.");return false}return true}).slice(0,4-files.length).map(file=>({file,status:"ready" as const}));setFiles(v=>[...v,...next])};
- const submit=async()=>{if(!files.length||!confirm)return;setBusy(true);setError("");const sb=createClient();if(!sb){setTimeout(()=>{setSubmitted(true);setBusy(false)},650);return}const{data:{user}}=await sb.auth.getUser();if(!user){setError("Please sign in before submitting evidence.");setBusy(false);return}const paths:string[]=[];for(let i=0;i<files.length;i++){setFiles(v=>v.map((x,n)=>n===i?{...x,status:"uploading"}:x));const clean=files[i].file.name.replace(/[^a-zA-Z0-9._-]/g,"-");const path=`${user.id}/${crypto.randomUUID()}-${clean}`;const{error:up}=await sb.storage.from("learner-evidence").upload(path,files[i].file,{upsert:false});if(up){setFiles(v=>v.map((x,n)=>n===i?{...x,status:"error"}:x));setError(up.message);setBusy(false);return}paths.push(path);setFiles(v=>v.map((x,n)=>n===i?{...x,status:"done"}:x))}try{await saveEvidenceMetadata({skillSlug:"control-circuit-wiring",title:"Start/stop control-circuit wiring board",description,storagePaths:paths},crypto.randomUUID())}catch(reason){setError(reason instanceof Error?reason.message:"Evidence could not be recorded.");setBusy(false);return}setSubmitted(true);setBusy(false)};
- const c=lang==="en"?{title:"Turn your work into verified evidence.",sub:"Complete the practical task, document it clearly and submit it for a trained reviewer.",brief:"PROJECT BRIEF",project:"Wire and test a start/stop control circuit",task:"Build the circuit from the supplied drawing, demonstrate safe isolation, then record the completed wiring and a short functional test.",submit:"Submit for verification",privacy:"Private until you choose to share",files:"Add your evidence",explain:"Explain your work",placeholder:"What did you build? What checks did you perform? What problem did you solve?",confirm:"I confirm this is my work and does not show another person without permission."}:{title:"अपने काम को verified evidence में बदलें।",sub:"Practical task पूरा करें, उसे साफ़ document करें और trained reviewer को submit करें।",brief:"PROJECT BRIEF",project:"Start/stop control circuit wire और test करें",task:"Supplied drawing से circuit बनाएँ, safe isolation demonstrate करें, फिर completed wiring और functional test record करें।",submit:"Verification के लिए submit करें",privacy:"Share करने तक private",files:"अपना evidence जोड़ें",explain:"अपने काम को explain करें",placeholder:"आपने क्या बनाया? कौन से checks किए? कौन-सी problem solve की?",confirm:"मैं confirm करता/करती हूँ कि यह मेरा काम है और इसमें बिना permission किसी अन्य व्यक्ति को नहीं दिखाया गया है।"};
- if(submitted)return <main className="evidence-success"><section><div className="success-orb"><CheckCircle2/></div><p>SUBMISSION RECEIVED</p><h1>{lang==="en"?"Your evidence is now in review.":"आपका evidence अब review में है।"}</h1><span>{lang==="en"?"A trained reviewer will use the published rubric. You’ll see the decision, dimension feedback and any requested revision here.":"Trained reviewer published rubric से review करेगा। Decision, dimension feedback और requested revision यहीं दिखेंगे।"}</span><div className="review-timeline"><div className="done"><i><Check/></i><p><b>Submitted</b><small>Just now</small></p></div><div className="active"><i><CircleDashed/></i><p><b>Technical review</b><small>Expected within 2 working days</small></p></div><div><i>3</i><p><b>Skill Graph updated</b><small>After verification</small></p></div></div><div className="success-note"><ShieldCheck/><p><b>No automatic verification</b><span>AI may help organize the submission, but a trained human makes the verification decision.</span></p></div><div className="success-actions"><Link href="/dashboard">Return to dashboard<ArrowRight/></Link><button onClick={()=>{setSubmitted(false);setFiles([]);setConfirm(false);setDescription("")}}>Submit another project</button></div></section></main>;
- return <main className="evidence-shell"><header><Link href="/dashboard" className="evidence-brand"><span>क</span><div>KarmaSetu <b>AI</b><small>कौशल से करियर तक</small></div></Link><div><span><LockKeyhole/>{c.privacy}</span><button onClick={()=>setLang(lang==="en"?"hi":"en")}><Languages/>{lang==="en"?"हिंदी + EN":"EN + हिंदी"}</button></div></header><div className="evidence-progress"><span className="done"><Check/>Learn</span><i/><span className="current">2</span><b>Prove</b><i/><span>3</span><b>Interview</b><i/><span>4</span><b>Match</b></div>
- <section className="evidence-hero"><div><p><Sparkles/>PRACTICAL EVIDENCE · INDUSTRIAL ELECTRICIAN</p><h1>{c.title}</h1><span>{c.sub}</span></div><aside><b>+13</b><p>potential readiness points<small>after successful verification</small></p></aside></section>
- <section className="evidence-layout"><article className="brief-card"><div className="brief-label"><Wrench/><span><b>{c.brief}</b><small>Control-circuit wiring · Foundation</small></span></div><h2>{c.project}</h2><p>{c.task}</p><div className="brief-meta"><span><Clock3/><b>Suggested time</b><small>45–60 minutes</small></span><span><Paperclip/><b>Submit</b><small>2–4 files</small></span><span><ShieldCheck/><b>Review type</b><small>Human verified</small></span></div><h3>What your reviewer will look for</h3><div className="rubric">{rubric.map((r,i)=><div key={r.title}><i>{i+1}</i><p><b>{r.title}</b><span>{r.desc}</span></p><strong>{r.weight}%</strong></div>)}</div><div className="brief-tip"><Lightbulb/><p><b>Evidence tip</b><span>Include one clear photo of the complete board, one close-up of terminations and a short test video. Avoid showing faces or unrelated personal information.</span></p></div></article>
- <article className="submission-card"><div className="submission-head"><UploadCloud/><div><p>YOUR SUBMISSION</p><h2>{c.files}</h2></div></div>{!uploadsEnabled?<div className="evidence-error"><ShieldCheck/>{uploadReason}</div>:null}<button className="dropzone" disabled={!uploadsEnabled} onClick={()=>input.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(uploadsEnabled)addFiles(e.dataTransfer.files)}}><UploadCloud/><b>{uploadsEnabled?"Drop files here or choose from device":"Uploads paused for pilot safety"}</b><span>PDF, JPG, PNG or MP4 · Maximum 10 MB each · Up to 4 files</span></button><input ref={input} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.mp4" hidden disabled={!uploadsEnabled} onChange={(e:ChangeEvent<HTMLInputElement>)=>addFiles(e.target.files)}/>{error&&<div className="evidence-error"><AlertCircle/>{error}</div>}<div className="file-list">{files.map((x,i)=><div key={`${x.file.name}-${i}`}><i>{x.file.type.startsWith("image")?<FileImage/>:x.file.type.startsWith("video")?<Video/>:<FileText/>}</i><p><b>{x.file.name}</b><span>{(x.file.size/1024/1024).toFixed(1)} MB · {x.status}</span></p><button onClick={()=>setFiles(v=>v.filter((_,n)=>n!==i))} disabled={busy}><RotateCcw/></button></div>)}</div><label>{c.explain}<textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder={c.placeholder} disabled={!uploadsEnabled}/><small>{description.length}/1000</small></label><button className={`evidence-confirm ${confirm?"checked":""}`} onClick={()=>setConfirm(!confirm)} disabled={!uploadsEnabled}><i>{confirm&&<Check/>}</i><span>{c.confirm}</span></button><div className="submit-privacy"><ShieldCheck/><p><b>Private and controlled</b><span>Files stay unavailable until the quarantine and scanning pipeline is operational.</span></p></div><button className="submit-evidence" disabled={!uploadsEnabled||!files.length||!confirm||busy} onClick={submit}>{busy?"Uploading securely…":c.submit}<ChevronRight/></button></article></section></main>}
+export default function Evidence() {
+  const [lang, setLang] = useState<Lang>("en"),
+    [files, setFiles] = useState<UploadItem[]>([]),
+    [description, setDescription] = useState(""),
+    [confirm, setConfirm] = useState(false),
+    [submitted, setSubmitted] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [uploadsEnabled, setUploadsEnabled] = useState(false),
+    [uploadReason, setUploadReason] = useState("Checking pilot upload safety…");
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    void (async () => {
+      try {
+        const response = await fetch("/api/capabilities", {
+          cache: "no-store",
+        });
+        const body = await response.json();
+        setUploadsEnabled(Boolean(body.evidenceUploads));
+        setUploadReason(body.evidenceReason ?? "");
+      } catch {
+        setUploadReason("Evidence upload safety status is unavailable.");
+      }
+    })();
+  }, []);
+  const addFiles = (list: FileList | null) => {
+    if (!list) return;
+    setError("");
+    const next = Array.from(list)
+      .filter((f) => {
+        if (!allowed.includes(f.type)) {
+          setError("Only PDF, JPG, PNG and MP4 files are supported.");
+          return false;
+        }
+        if (f.size > 10 * 1024 * 1024) {
+          setError("Each file must be 10 MB or smaller.");
+          return false;
+        }
+        return true;
+      })
+      .slice(0, 4 - files.length)
+      .map((file) => ({ file, status: "ready" as const }));
+    setFiles((v) => [...v, ...next]);
+  };
+  const submit = async () => {
+    if (!files.length || !confirm) return;
+    setBusy(true);
+    setError("");
+    const sb = createClient();
+    if (!sb) {
+      setTimeout(() => {
+        setSubmitted(true);
+        setBusy(false);
+      }, 650);
+      return;
+    }
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    if (!user) {
+      setError("Please sign in before submitting evidence.");
+      setBusy(false);
+      return;
+    }
+    const paths: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      setFiles((v) =>
+        v.map((x, n) => (n === i ? { ...x, status: "uploading" } : x)),
+      );
+      const clean = files[i].file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const path = `${user.id}/${crypto.randomUUID()}-${clean}`;
+      const { error: up } = await sb.storage
+        .from("learner-evidence")
+        .upload(path, files[i].file, { upsert: false });
+      if (up) {
+        setFiles((v) =>
+          v.map((x, n) => (n === i ? { ...x, status: "error" } : x)),
+        );
+        setError(up.message);
+        setBusy(false);
+        return;
+      }
+      paths.push(path);
+      setFiles((v) =>
+        v.map((x, n) => (n === i ? { ...x, status: "done" } : x)),
+      );
+    }
+    try {
+      await saveEvidenceMetadata(
+        {
+          skillSlug: "control-circuit-wiring",
+          title: "Start/stop control-circuit wiring board",
+          description,
+          storagePaths: paths,
+        },
+        crypto.randomUUID(),
+      );
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Evidence could not be recorded.",
+      );
+      setBusy(false);
+      return;
+    }
+    setSubmitted(true);
+    setBusy(false);
+  };
+  const c =
+    lang === "en"
+      ? {
+          title: "Turn your work into verified evidence.",
+          sub: "Complete the practical task, document it clearly and submit it for a trained reviewer.",
+          brief: "PROJECT BRIEF",
+          project: "Wire and test a start/stop control circuit",
+          task: "Build the circuit from the supplied drawing, demonstrate safe isolation, then record the completed wiring and a short functional test.",
+          submit: "Submit for verification",
+          privacy: "Private until you choose to share",
+          files: "Add your evidence",
+          explain: "Explain your work",
+          placeholder:
+            "What did you build? What checks did you perform? What problem did you solve?",
+          confirm:
+            "I confirm this is my work and does not show another person without permission.",
+        }
+      : {
+          title: "अपने काम को verified evidence में बदलें।",
+          sub: "Practical task पूरा करें, उसे साफ़ document करें और trained reviewer को submit करें।",
+          brief: "PROJECT BRIEF",
+          project: "Start/stop control circuit wire और test करें",
+          task: "Supplied drawing से circuit बनाएँ, safe isolation demonstrate करें, फिर completed wiring और functional test record करें।",
+          submit: "Verification के लिए submit करें",
+          privacy: "Share करने तक private",
+          files: "अपना evidence जोड़ें",
+          explain: "अपने काम को explain करें",
+          placeholder:
+            "आपने क्या बनाया? कौन से checks किए? कौन-सी problem solve की?",
+          confirm:
+            "मैं confirm करता/करती हूँ कि यह मेरा काम है और इसमें बिना permission किसी अन्य व्यक्ति को नहीं दिखाया गया है।",
+        };
+  if (submitted)
+    return (
+      <main className="evidence-success">
+        <section>
+          <div className="success-orb">
+            <CheckCircle2 />
+          </div>
+          <p>SUBMISSION RECEIVED</p>
+          <h1>
+            {lang === "en"
+              ? "Your evidence is now in review."
+              : "आपका evidence अब review में है।"}
+          </h1>
+          <span>
+            {lang === "en"
+              ? "A trained reviewer will use the published rubric. You’ll see the decision, dimension feedback and any requested revision here."
+              : "Trained reviewer published rubric से review करेगा। Decision, dimension feedback और requested revision यहीं दिखेंगे।"}
+          </span>
+          <div className="review-timeline">
+            <div className="done">
+              <i>
+                <Check />
+              </i>
+              <p>
+                <b>Submitted</b>
+                <small>Just now</small>
+              </p>
+            </div>
+            <div className="active">
+              <i>
+                <CircleDashed />
+              </i>
+              <p>
+                <b>Technical review</b>
+                <small>Expected within 2 working days</small>
+              </p>
+            </div>
+            <div>
+              <i>3</i>
+              <p>
+                <b>Skill Graph updated</b>
+                <small>After verification</small>
+              </p>
+            </div>
+          </div>
+          <div className="success-note">
+            <ShieldCheck />
+            <p>
+              <b>No automatic verification</b>
+              <span>
+                AI may help organize the submission, but a trained human makes
+                the verification decision.
+              </span>
+            </p>
+          </div>
+          <div className="success-actions">
+            <Link href="/dashboard">
+              Return to dashboard
+              <ArrowRight />
+            </Link>
+            <button
+              onClick={() => {
+                setSubmitted(false);
+                setFiles([]);
+                setConfirm(false);
+                setDescription("");
+              }}
+            >
+              Submit another project
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  return (
+    <main className="evidence-shell">
+      <header>
+        <Link href="/dashboard" className="evidence-brand">
+          <span>क</span>
+          <div>
+            KarmaSetu <b>AI</b>
+            <small>कौशल से करियर तक</small>
+          </div>
+        </Link>
+        <div>
+          <LearnerReturnLink />
+          <span>
+            <LockKeyhole />
+            {c.privacy}
+          </span>
+          <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+            <Languages />
+            {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
+          </button>
+        </div>
+      </header>
+      <div className="evidence-progress">
+        <span className="done">
+          <Check />
+          Learn
+        </span>
+        <i />
+        <span className="current">2</span>
+        <b>Prove</b>
+        <i />
+        <span>3</span>
+        <b>Interview</b>
+        <i />
+        <span>4</span>
+        <b>Match</b>
+      </div>
+      <section className="evidence-hero">
+        <div>
+          <p>
+            <Sparkles />
+            PRACTICAL EVIDENCE · INDUSTRIAL ELECTRICIAN
+          </p>
+          <h1>{c.title}</h1>
+          <span>{c.sub}</span>
+        </div>
+        <aside>
+          <b>+13</b>
+          <p>
+            potential readiness points
+            <small>after successful verification</small>
+          </p>
+        </aside>
+      </section>
+      <section className="evidence-layout">
+        <article className="brief-card">
+          <div className="brief-label">
+            <Wrench />
+            <span>
+              <b>{c.brief}</b>
+              <small>Control-circuit wiring · Foundation</small>
+            </span>
+          </div>
+          <h2>{c.project}</h2>
+          <p>{c.task}</p>
+          <div className="brief-meta">
+            <span>
+              <Clock3 />
+              <b>Suggested time</b>
+              <small>45–60 minutes</small>
+            </span>
+            <span>
+              <Paperclip />
+              <b>Submit</b>
+              <small>2–4 files</small>
+            </span>
+            <span>
+              <ShieldCheck />
+              <b>Review type</b>
+              <small>Human verified</small>
+            </span>
+          </div>
+          <h3>What your reviewer will look for</h3>
+          <div className="rubric">
+            {rubric.map((r, i) => (
+              <div key={r.title}>
+                <i>{i + 1}</i>
+                <p>
+                  <b>{r.title}</b>
+                  <span>{r.desc}</span>
+                </p>
+                <strong>{r.weight}%</strong>
+              </div>
+            ))}
+          </div>
+          <div className="brief-tip">
+            <Lightbulb />
+            <p>
+              <b>Evidence tip</b>
+              <span>
+                Include one clear photo of the complete board, one close-up of
+                terminations and a short test video. Avoid showing faces or
+                unrelated personal information.
+              </span>
+            </p>
+          </div>
+        </article>
+        <article className="submission-card">
+          <div className="submission-head">
+            <UploadCloud />
+            <div>
+              <p>YOUR SUBMISSION</p>
+              <h2>{c.files}</h2>
+            </div>
+          </div>
+          {!uploadsEnabled ? (
+            <div className="evidence-error">
+              <ShieldCheck />
+              {uploadReason}
+            </div>
+          ) : null}
+          <button
+            className="dropzone"
+            disabled={!uploadsEnabled}
+            onClick={() => input.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (uploadsEnabled) addFiles(e.dataTransfer.files);
+            }}
+          >
+            <UploadCloud />
+            <b>
+              {uploadsEnabled
+                ? "Drop files here or choose from device"
+                : "Uploads paused for pilot safety"}
+            </b>
+            <span>
+              PDF, JPG, PNG or MP4 · Maximum 10 MB each · Up to 4 files
+            </span>
+          </button>
+          <input
+            ref={input}
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.mp4"
+            hidden
+            disabled={!uploadsEnabled}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              addFiles(e.target.files)
+            }
+          />
+          {error && (
+            <div className="evidence-error">
+              <AlertCircle />
+              {error}
+            </div>
+          )}
+          <div className="file-list">
+            {files.map((x, i) => (
+              <div key={`${x.file.name}-${i}`}>
+                <i>
+                  {x.file.type.startsWith("image") ? (
+                    <FileImage />
+                  ) : x.file.type.startsWith("video") ? (
+                    <Video />
+                  ) : (
+                    <FileText />
+                  )}
+                </i>
+                <p>
+                  <b>{x.file.name}</b>
+                  <span>
+                    {(x.file.size / 1024 / 1024).toFixed(1)} MB · {x.status}
+                  </span>
+                </p>
+                <button
+                  onClick={() => setFiles((v) => v.filter((_, n) => n !== i))}
+                  disabled={busy}
+                >
+                  <RotateCcw />
+                </button>
+              </div>
+            ))}
+          </div>
+          <label>
+            {c.explain}
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={c.placeholder}
+              disabled={!uploadsEnabled}
+            />
+            <small>{description.length}/1000</small>
+          </label>
+          <button
+            className={`evidence-confirm ${confirm ? "checked" : ""}`}
+            onClick={() => setConfirm(!confirm)}
+            disabled={!uploadsEnabled}
+          >
+            <i>{confirm && <Check />}</i>
+            <span>{c.confirm}</span>
+          </button>
+          <div className="submit-privacy">
+            <ShieldCheck />
+            <p>
+              <b>Private and controlled</b>
+              <span>
+                Files stay unavailable until the quarantine and scanning
+                pipeline is operational.
+              </span>
+            </p>
+          </div>
+          <button
+            className="submit-evidence"
+            disabled={!uploadsEnabled || !files.length || !confirm || busy}
+            onClick={submit}
+          >
+            {busy ? "Uploading securely…" : c.submit}
+            <ChevronRight />
+          </button>
+        </article>
+      </section>
+    </main>
+  );
+}

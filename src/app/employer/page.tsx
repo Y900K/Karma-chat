@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   Bell,
   BriefcaseBusiness,
   Building2,
@@ -27,7 +26,13 @@ import {
 } from "lucide-react";
 import "./employer.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
-import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
+import {
+  useWorkspaceLanguage,
+  WorkspaceHeaderLink,
+  WorkspaceSearch,
+  WorkspaceSectionLink,
+  WorkspaceSignOut,
+} from "@/components/workspace-utilities";
 
 const candidates = [
   {
@@ -83,7 +88,7 @@ const jobs = [
 ];
 
 export default function Employer() {
-  const {lang,toggleLanguage}=useWorkspaceLanguage();
+  const { lang, toggleLanguage } = useWorkspaceLanguage();
   const copy =
     lang === "en"
       ? {
@@ -110,7 +115,11 @@ export default function Employer() {
             <small>EMPLOYER WORKSPACE</small>
           </div>
         </Link>
-        <Link href="/workspace/settings" className="company" aria-label="Open employer workspace settings">
+        <Link
+          href="/workspace/settings"
+          className="company"
+          aria-label="Open employer workspace settings"
+        >
           <Building2 />
           <p>
             <b>Shakti Auto Components</b>
@@ -120,24 +129,22 @@ export default function Employer() {
         </Link>
         <nav>
           {[
-            [LayoutDashboard, "Overview","employer-overview"],
-            [BriefcaseBusiness, "Jobs","employer-jobs"],
-            [Users, "Talent","employer-talent"],
-            [CalendarClock, "Interviews","employer-pipeline"],
-            [Handshake, "Offers","employer-pipeline"],
-            [BarChart3, "Outcomes","employer-pipeline"],
-          ].map(([Icon, label,target], i) => {
+            [LayoutDashboard, "Overview", "employer-overview"],
+            [BriefcaseBusiness, "Jobs", "employer-jobs"],
+            [Users, "Talent", "employer-talent"],
+            [CalendarClock, "Hiring pipeline", "employer-pipeline"],
+          ].map(([Icon, label, target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
-              <a
-                className={i === 0 ? "active" : ""}
+              <WorkspaceSectionLink
                 href={`#${String(target)}`}
+                overview={i === 0}
                 key={String(label)}
               >
                 <I />
                 {String(label)}
                 {i === 2 && <em>12</em>}
-              </a>
+              </WorkspaceSectionLink>
             );
           })}
         </nav>
@@ -146,7 +153,7 @@ export default function Employer() {
             <Settings />
             Workspace settings
           </Link>
-          <WorkspaceSignOut/>
+          <WorkspaceSignOut />
           <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
@@ -158,13 +165,32 @@ export default function Employer() {
       </aside>
       <section className="emp-main">
         <header>
-          <WorkspaceSearch placeholder="Search talent, jobs or interviews…" targets={{"talent|candidate|skill":"employer-talent","job|role|vacancy":"employer-jobs","interview|offer|outcome|pipeline":"employer-pipeline"}}/>
+          <WorkspaceSearch
+            placeholder="Search talent, jobs or interviews…"
+            targets={{
+              "talent|candidate|skill": "employer-talent",
+              "job|role|vacancy": "employer-jobs",
+              "interview|offer|outcome|pipeline": "employer-pipeline",
+            }}
+          />
           <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <WorkspaceHeaderLink href="/workspace/notifications" label="Employer notifications" className="bell"><Bell/><i/></WorkspaceHeaderLink>
-          <WorkspaceHeaderLink href="/workspace/settings" label="Employer account settings"><CircleUserRound/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/notifications"
+            label="Employer notifications"
+            className="bell"
+          >
+            <Bell />
+            <i />
+          </WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/settings"
+            label="Employer account settings"
+          >
+            <CircleUserRound />
+          </WorkspaceHeaderLink>
         </header>
         <div className="emp-content" id="employer-overview">
           <div className="emp-welcome">
@@ -198,21 +224,51 @@ export default function Employer() {
           </div>
           <div className="emp-kpis">
             {[
-              [BriefcaseBusiness, "Open roles", "2", "26 vacancies", "employer-jobs"],
-              [Users, "Qualified matches", "95", "12 new this week", "employer-talent"],
-              [CalendarClock, "Interviews", "14", "5 awaiting feedback", "employer-pipeline"],
-              [Handshake, "Offers accepted", "8", "80% acceptance", "employer-pipeline"],
+              [
+                BriefcaseBusiness,
+                "Open roles",
+                "2",
+                "26 vacancies",
+                "employer-jobs",
+              ],
+              [
+                Users,
+                "Qualified matches",
+                "95",
+                "12 new this week",
+                "employer-talent",
+              ],
+              [
+                CalendarClock,
+                "Interviews",
+                "14",
+                "5 awaiting feedback",
+                "employer-pipeline",
+              ],
+              [
+                Handshake,
+                "Offers accepted",
+                "8",
+                "80% acceptance",
+                "employer-pipeline",
+              ],
             ].map(([Icon, label, value, note, target]) => {
               const I = Icon as typeof BriefcaseBusiness;
               return (
-                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
-                  <div>
-                    <I />
-                    <span>{String(label)}</span>
-                  </div>
-                  <b>{String(value)}</b>
-                  <small>{String(note)}</small>
-                </article></a>
+                <a
+                  className="workspace-kpi"
+                  href={`#${String(target)}`}
+                  key={String(label)}
+                >
+                  <article>
+                    <div>
+                      <I />
+                      <span>{String(label)}</span>
+                    </div>
+                    <b>{String(value)}</b>
+                    <small>{String(note)}</small>
+                  </article>
+                </a>
               );
             })}
           </div>

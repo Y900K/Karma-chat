@@ -29,7 +29,13 @@ import {
 } from "lucide-react";
 import "./institute.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
-import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
+import {
+  useWorkspaceLanguage,
+  WorkspaceHeaderLink,
+  WorkspaceSearch,
+  WorkspaceSectionLink,
+  WorkspaceSignOut,
+} from "@/components/workspace-utilities";
 
 const cohorts = [
   {
@@ -92,7 +98,7 @@ const gaps = [
 ];
 
 export default function Institute() {
-  const {lang,toggleLanguage}=useWorkspaceLanguage();
+  const { lang, toggleLanguage } = useWorkspaceLanguage();
   const [cohort, setCohort] = useState(0),
     [privacy, setPrivacy] = useState(true);
   const c =
@@ -133,7 +139,11 @@ export default function Institute() {
             <small>INSTITUTE WORKSPACE</small>
           </div>
         </Link>
-        <Link href="/workspace/settings" className="institute-name" aria-label="Open institute workspace settings">
+        <Link
+          href="/workspace/settings"
+          className="institute-name"
+          aria-label="Open institute workspace settings"
+        >
           <Building2 />
           <p>
             <b>Government ITI Dehradun</b>
@@ -143,25 +153,24 @@ export default function Institute() {
         </Link>
         <nav>
           {[
-            [LayoutDashboard, "Overview","institute-overview"],
-            [Users, "Learners","institute-learners"],
-            [GraduationCap, "Cohorts","institute-cohorts"],
-            [BookOpen, "Learning","institute-learning"],
-            [FileBadge2, "Evidence review","institute-learners"],
-            [Target, "Placements","institute-placements"],
-            [BarChart3, "Reports","institute-reports"],
-          ].map(([Icon, label,target], i) => {
+            [LayoutDashboard, "Overview", "institute-overview"],
+            [Users, "Learners & evidence", "institute-learners"],
+            [GraduationCap, "Cohorts", "institute-cohorts"],
+            [BookOpen, "Learning", "institute-learning"],
+            [Target, "Placements", "institute-placements"],
+            [BarChart3, "Reports", "institute-reports"],
+          ].map(([Icon, label, target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
-              <a
-                className={i === 0 ? "active" : ""}
+              <WorkspaceSectionLink
                 href={`#${String(target)}`}
+                overview={i === 0}
                 key={String(label)}
               >
                 <I />
                 {String(label)}
                 {i === 4 && <em>7</em>}
-              </a>
+              </WorkspaceSectionLink>
             );
           })}
         </nav>
@@ -170,7 +179,7 @@ export default function Institute() {
             <Settings />
             Workspace settings
           </Link>
-          <WorkspaceSignOut/>
+          <WorkspaceSignOut />
           <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
@@ -182,13 +191,33 @@ export default function Institute() {
       </aside>
       <section className="inst-main">
         <header>
-          <WorkspaceSearch placeholder="Search learner, cohort or employer…" targets={{"learner|evidence":"institute-learners","cohort|report":"institute-cohorts","learning|skill":"institute-learning","placement|employer":"institute-placements"}}/>
+          <WorkspaceSearch
+            placeholder="Search learner, cohort or employer…"
+            targets={{
+              "learner|evidence": "institute-learners",
+              "cohort|report": "institute-cohorts",
+              "learning|skill": "institute-learning",
+              "placement|employer": "institute-placements",
+            }}
+          />
           <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <WorkspaceHeaderLink href="/workspace/notifications" label="Institute notifications" className="notify"><Bell/><i/></WorkspaceHeaderLink>
-          <WorkspaceHeaderLink href="/workspace/settings" label="Institute account settings"><CircleUserRound/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/notifications"
+            label="Institute notifications"
+            className="notify"
+          >
+            <Bell />
+            <i />
+          </WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/settings"
+            label="Institute account settings"
+          >
+            <CircleUserRound />
+          </WorkspaceHeaderLink>
         </header>
         <div className="inst-content" id="institute-overview">
           <div className="inst-welcome">
@@ -230,22 +259,56 @@ export default function Institute() {
           </div>
           <div className="inst-kpis">
             {[
-              [TrendingUp, c.readiness, "68%", "+6 pts", "Target: 75%", "institute-reports"],
-              [BookOpen, c.engagement, "78%", "+9%", "104 active this week", "institute-learning"],
-              [FileBadge2, c.evidence, "57%", "+14", "72 verified projects", "institute-learners"],
-              [Target, c.placements, "31", "+8", "11 interviews scheduled", "institute-placements"],
+              [
+                TrendingUp,
+                c.readiness,
+                "68%",
+                "+6 pts",
+                "Target: 75%",
+                "institute-reports",
+              ],
+              [
+                BookOpen,
+                c.engagement,
+                "78%",
+                "+9%",
+                "104 active this week",
+                "institute-learning",
+              ],
+              [
+                FileBadge2,
+                c.evidence,
+                "57%",
+                "+14",
+                "72 verified projects",
+                "institute-learners",
+              ],
+              [
+                Target,
+                c.placements,
+                "31",
+                "+8",
+                "11 interviews scheduled",
+                "institute-placements",
+              ],
             ].map(([Icon, label, value, delta, note, target]) => {
               const I = Icon as typeof TrendingUp;
               return (
-                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
-                  <div>
-                    <I />
-                    <span>{String(label)}</span>
-                  </div>
-                  <b>{String(value)}</b>
-                  <em>{String(delta)}</em>
-                  <small>{String(note)}</small>
-                </article></a>
+                <a
+                  className="workspace-kpi"
+                  href={`#${String(target)}`}
+                  key={String(label)}
+                >
+                  <article>
+                    <div>
+                      <I />
+                      <span>{String(label)}</span>
+                    </div>
+                    <b>{String(value)}</b>
+                    <em>{String(delta)}</em>
+                    <small>{String(note)}</small>
+                  </article>
+                </a>
               );
             })}
           </div>

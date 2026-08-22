@@ -113,29 +113,58 @@ export default function Dashboard() {
   const { lang, toggleLanguage } = useWorkspaceLanguage();
   const [query, setQuery] = useState("");
   const [headerSearch, setHeaderSearch] = useState("");
-  const [identity, setIdentity] = useState({ displayName: "Learner", trade: "Current pathway", semester: null as number | null });
+  const [identity, setIdentity] = useState({
+    displayName: "Learner",
+    trade: "Current pathway",
+    semester: null as number | null,
+  });
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
+  const [aiStatus, setAiStatus] = useState<
+    "idle" | "loading" | "live" | "degraded" | "error"
+  >("idle");
   const c = content[lang];
   const searchNavigate = () => {
     const value = headerSearch.trim().toLowerCase();
-    const destination = /lesson|learn|course|path/.test(value) ? "/learn" : /evidence|proof|project/.test(value) ? "/evidence" : /interview|practice/.test(value) ? "/interview" : /job|opportun|application/.test(value) ? "/opportunities" : "/roles";
+    const destination = /lesson|learn|course|path/.test(value)
+      ? "/learn"
+      : /evidence|proof|project/.test(value)
+        ? "/evidence"
+        : /interview|practice/.test(value)
+          ? "/interview"
+          : /job|opportun|application/.test(value)
+            ? "/opportunities"
+            : "/roles";
     router.push(destination);
   };
   useEffect(() => {
     const controller = new AbortController();
-    void fetch("/api/dashboard?scope=learner", { cache: "no-store", signal: controller.signal })
-      .then((response) => response.ok ? response.json() : null)
+    void fetch("/api/dashboard?scope=learner", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
       .then((payload) => {
-        if (payload?.data?.identity) setIdentity({ displayName: String(payload.data.identity.displayName || "Learner"), trade: String(payload.data.identity.trade || "Current pathway"), semester: typeof payload.data.identity.semester === "number" ? payload.data.identity.semester : null });
-        if (typeof payload?.data?.metrics?.unreadNotifications === "number") setUnreadNotifications(payload.data.metrics.unreadNotifications);
-      }).catch(() => undefined);
+        if (payload?.data?.identity)
+          setIdentity({
+            displayName: String(payload.data.identity.displayName || "Learner"),
+            trade: String(payload.data.identity.trade || "Current pathway"),
+            semester:
+              typeof payload.data.identity.semester === "number"
+                ? payload.data.identity.semester
+                : null,
+          });
+        if (typeof payload?.data?.metrics?.unreadNotifications === "number")
+          setUnreadNotifications(payload.data.metrics.unreadNotifications);
+      })
+      .catch(() => undefined);
     return () => controller.abort();
   }, []);
   const askCoach = async () => {
     if (!query.trim()) return;
     setBusy(true);
+    setAiStatus("loading");
     setAnswer("");
     try {
       const res = await fetch("/api/ai", {
@@ -148,9 +177,14 @@ export default function Dashboard() {
         }),
       });
       const data = await res.json();
-      setAnswer(data.message || data.error || "Please try again.");
+      if (!res.ok) throw new Error(data.error || "AI coaching is unavailable");
+      setAnswer(data.message || "Please try again.");
+      setAiStatus(data.degraded ? "degraded" : "live");
     } catch {
-      setAnswer("The coach is taking a short break. Please try again.");
+      setAnswer(
+        "The coach is reconnecting. Your learning path remains available while live coaching recovers.",
+      );
+      setAiStatus("error");
     }
     setBusy(false);
   };
@@ -185,7 +219,7 @@ export default function Dashboard() {
                         ? "/interview"
                         : i === 5
                           ? "/opportunities"
-                  : "/dashboard"
+                          : "/dashboard"
               }
               className={i === 0 ? "active" : ""}
               key={c.nav[i]}
@@ -197,17 +231,22 @@ export default function Dashboard() {
           ))}
         </nav>
         <div className="side-bottom">
-            <Link href="/settings">
-              <Settings /> Settings
-            </Link>
-            <form action="/auth/signout" method="post">
-              <button className="signout-button" type="submit"><LogOut /> Sign out</button>
-            </form>
+          <Link href="/settings">
+            <Settings /> Settings
+          </Link>
+          <form action="/auth/signout" method="post">
+            <button className="signout-button" type="submit">
+              <LogOut /> Sign out
+            </button>
+          </form>
           <div className="profile-mini">
             <CircleUserRound />
             <span>
               <b>{identity.displayName}</b>
-              <small>{identity.trade}{identity.semester ? ` · Semester ${identity.semester}` : ""}</small>
+              <small>
+                {identity.trade}
+                {identity.semester ? ` · Semester ${identity.semester}` : ""}
+              </small>
             </span>
           </div>
         </div>
@@ -215,21 +254,35 @@ export default function Dashboard() {
       <section className="dash-main">
         <header className="dash-top">
           <div className="mobile-brand">क</div>
-          <form className="dash-search" onSubmit={(event) => { event.preventDefault(); searchNavigate(); }}>
-            <Search />
-            <input value={headerSearch} onChange={(event) => setHeaderSearch(event.target.value)} placeholder="Search skills, lessons, opportunities…" aria-label="Search roles and skills" />
-          </form>
-          <button
-            className="lang-switch"
-            onClick={toggleLanguage}
+          <form
+            className="dash-search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              searchNavigate();
+            }}
           >
+            <Search />
+            <input
+              value={headerSearch}
+              onChange={(event) => setHeaderSearch(event.target.value)}
+              placeholder="Search skills, lessons, opportunities…"
+              aria-label="Search roles and skills"
+            />
+          </form>
+          <button className="lang-switch" onClick={toggleLanguage}>
             <Languages /> {lang === "en" ? "हिंदी" : "EN"}
           </button>
-          <Link className="icon-btn" href="/notifications" aria-label={`Notifications${unreadNotifications ? ` (${unreadNotifications} unread)` : ""}`}>
+          <Link
+            className="icon-btn"
+            href="/notifications"
+            aria-label={`Notifications${unreadNotifications ? ` (${unreadNotifications} unread)` : ""}`}
+          >
             <Bell />
             {unreadNotifications > 0 && <span />}
           </Link>
-          <Link href="/settings" aria-label="Account settings"><CircleUserRound className="mobile-avatar" /></Link>
+          <Link href="/settings" aria-label="Account settings">
+            <CircleUserRound className="mobile-avatar" />
+          </Link>
         </header>
         <div className="dash-content">
           <div className="welcome">
@@ -237,7 +290,11 @@ export default function Dashboard() {
               <p className="dash-eyebrow">
                 <Sparkles /> {c.active}
               </p>
-              <h1>{lang === "en" ? `Good afternoon, ${identity.displayName}.` : `नमस्ते ${identity.displayName}।`}</h1>
+              <h1>
+                {lang === "en"
+                  ? `Good afternoon, ${identity.displayName}.`
+                  : `नमस्ते ${identity.displayName}।`}
+              </h1>
               <p>{c.sub}</p>
             </div>
             <div className="week-stat">
@@ -383,13 +440,32 @@ export default function Dashboard() {
                   <p className="dash-label">KARMA AI</p>
                   <h3>{c.coach}</h3>
                 </div>
-                <span>ONLINE</span>
+                <span className={`ai-state ${aiStatus}`}>
+                  {aiStatus === "loading"
+                    ? "THINKING"
+                    : aiStatus === "degraded"
+                      ? "SAFE FALLBACK"
+                      : aiStatus === "error"
+                        ? "RECONNECT"
+                        : aiStatus === "live"
+                          ? "LIVE"
+                          : "READY"}
+                </span>
               </div>
               <p>
                 “Your practical score is the fastest route to a stronger match.
                 Want a 20-minute plan for today?”
               </p>
-              {answer && <div className="coach-answer">{answer}</div>}
+              {answer && (
+                <div className={`coach-answer ${aiStatus}`}>
+                  {answer}
+                  {(aiStatus === "degraded" || aiStatus === "error") && (
+                    <button className="ai-retry" onClick={askCoach}>
+                      Retry live coaching
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="coach-input">
                 <input
                   value={query}

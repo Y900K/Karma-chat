@@ -24,7 +24,8 @@ import {
   X,
 } from "lucide-react";
 import { submitApplication } from "@/app/actions/learner";
-import {z} from "zod";
+import { LearnerReturnLink } from "@/components/workspace-utilities";
+import { z } from "zod";
 import "./opportunities.css";
 
 type Lang = "en" | "hi";
@@ -43,7 +44,27 @@ type Job = {
   shift: string;
   posted: string;
 };
-const opportunityPageSchema=z.object({items:z.array(z.object({id:z.string(),role:z.string(),company:z.string(),location:z.string(),salary:z.string(),type:z.string(),match:z.number(),verified:z.boolean(),skills:z.array(z.string()),missing:z.array(z.string()),why:z.array(z.string()),shift:z.string(),posted:z.string()})),nextCursor:z.string().nullable(),appliedJobIds:z.array(z.string())});
+const opportunityPageSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      role: z.string(),
+      company: z.string(),
+      location: z.string(),
+      salary: z.string(),
+      type: z.string(),
+      match: z.number(),
+      verified: z.boolean(),
+      skills: z.array(z.string()),
+      missing: z.array(z.string()),
+      why: z.array(z.string()),
+      shift: z.string(),
+      posted: z.string(),
+    }),
+  ),
+  nextCursor: z.string().nullable(),
+  appliedJobIds: z.array(z.string()),
+});
 export default function Opportunities() {
   const [lang, setLang] = useState<Lang>("en"),
     [jobs, setJobs] = useState<Job[]>([]),
@@ -54,25 +75,57 @@ export default function Opportunities() {
     [consent, setConsent] = useState(false),
     [applied, setApplied] = useState<string[]>([]),
     [busy, setBusy] = useState(false),
-    [nextCursor,setNextCursor]=useState<string|null>(null),
-    [loadingMore,setLoadingMore]=useState(false),
+    [nextCursor, setNextCursor] = useState<string | null>(null),
+    [loadingMore, setLoadingMore] = useState(false),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
     const initial = window.setTimeout(async () => {
-      const response=await fetch("/api/opportunities?limit=20",{headers:{accept:"application/json"}});
-      const parsed=opportunityPageSchema.safeParse(await response.json().catch(()=>null));
-      if(!response.ok||!parsed.success){
+      const response = await fetch("/api/opportunities?limit=20", {
+        headers: { accept: "application/json" },
+      });
+      const parsed = opportunityPageSchema.safeParse(
+        await response.json().catch(() => null),
+      );
+      if (!response.ok || !parsed.success) {
         setError("Your live opportunity matches could not be loaded.");
         setLoading(false);
         return;
       }
-      setJobs(parsed.data.items);setSelected(parsed.data.items[0]??null);setApplied(parsed.data.appliedJobIds);setNextCursor(parsed.data.nextCursor);
+      setJobs(parsed.data.items);
+      setSelected(parsed.data.items[0] ?? null);
+      setApplied(parsed.data.appliedJobIds);
+      setNextCursor(parsed.data.nextCursor);
       setLoading(false);
     }, 0);
     return () => window.clearTimeout(initial);
   }, []);
-  const loadMore=async()=>{if(!nextCursor||loadingMore)return;setLoadingMore(true);setError("");try{const response=await fetch(`/api/opportunities?limit=20&cursor=${encodeURIComponent(nextCursor)}`),parsed=opportunityPageSchema.safeParse(await response.json().catch(()=>null));if(!response.ok||!parsed.success)throw new Error("Invalid opportunity page");setJobs(current=>[...current,...parsed.data.items.filter(item=>!current.some(existing=>existing.id===item.id))]);setNextCursor(parsed.data.nextCursor)}catch{setError("More opportunity matches could not be loaded.")}finally{setLoadingMore(false)}};
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError("");
+    try {
+      const response = await fetch(
+          `/api/opportunities?limit=20&cursor=${encodeURIComponent(nextCursor)}`,
+        ),
+        parsed = opportunityPageSchema.safeParse(
+          await response.json().catch(() => null),
+        );
+      if (!response.ok || !parsed.success)
+        throw new Error("Invalid opportunity page");
+      setJobs((current) => [
+        ...current,
+        ...parsed.data.items.filter(
+          (item) => !current.some((existing) => existing.id === item.id),
+        ),
+      ]);
+      setNextCursor(parsed.data.nextCursor);
+    } catch {
+      setError("More opportunity matches could not be loaded.");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
   const filtered = useMemo(
     () =>
       jobs.filter(
@@ -93,7 +146,11 @@ export default function Opportunities() {
       setApplied((v) => [...v, selected.id]);
       setApply(false);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "The application could not be submitted.");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "The application could not be submitted.",
+      );
     } finally {
       setBusy(false);
     }
@@ -126,9 +183,40 @@ export default function Opportunities() {
           control: "क्या share हो, यह आप तय करते हैं",
         };
   if (loading)
-    return <main className="opp-shell"><section className="opp-hero"><div><p>LIVE OPPORTUNITIES</p><h1>Loading your verified matches…</h1></div></section></main>;
+    return (
+      <main className="opp-shell">
+        <section className="opp-hero">
+          <div>
+            <p>LIVE OPPORTUNITIES</p>
+            <h1>Loading your verified matches…</h1>
+          </div>
+        </section>
+      </main>
+    );
   if (!selected)
-    return <main className="opp-shell"><header><Link href="/dashboard" className="opp-brand"><span>क</span><div>KarmaSetu <b>AI</b><small>कौशल से करियर तक</small></div></Link></header><section className="opp-hero"><div><p>LIVE OPPORTUNITIES</p><h1>No verified matches yet.</h1><span>{error || "Complete your diagnostic and evidence steps. New published roles will appear here automatically."}</span></div></section></main>;
+    return (
+      <main className="opp-shell">
+        <header>
+          <Link href="/dashboard" className="opp-brand">
+            <span>क</span>
+            <div>
+              KarmaSetu <b>AI</b>
+              <small>कौशल से करियर तक</small>
+            </div>
+          </Link>
+        </header>
+        <section className="opp-hero">
+          <div>
+            <p>LIVE OPPORTUNITIES</p>
+            <h1>No verified matches yet.</h1>
+            <span>
+              {error ||
+                "Complete your diagnostic and evidence steps. New published roles will appear here automatically."}
+            </span>
+          </div>
+        </section>
+      </main>
+    );
   return (
     <main className="opp-shell">
       <header>
@@ -140,6 +228,7 @@ export default function Opportunities() {
           </div>
         </Link>
         <div>
+          <LearnerReturnLink />
           <span>
             <ShieldCheck />
             Verified employers only
@@ -230,7 +319,15 @@ export default function Opportunities() {
               </strong>
             </button>
           ))}
-          {nextCursor&&<button className="pw-primary" onClick={loadMore} disabled={loadingMore}>{loadingMore?"Loading more…":"Load more opportunities"}</button>}
+          {nextCursor && (
+            <button
+              className="pw-primary"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading more…" : "Load more opportunities"}
+            </button>
+          )}
         </aside>
         <article className="opp-detail">
           <div className="detail-top">
@@ -427,7 +524,11 @@ export default function Opportunities() {
                 for this role. I can withdraw before employer review begins.
               </span>
             </button>
-            {error ? <div className="auth-error" role="alert">{error}</div> : null}
+            {error ? (
+              <div className="auth-error" role="alert">
+                {error}
+              </div>
+            ) : null}
             <button
               className="confirm-apply"
               disabled={!consent || busy}

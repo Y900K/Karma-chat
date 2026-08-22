@@ -6,7 +6,6 @@ import {
   ArrowRight,
   BarChart3,
   Bell,
-  Building2,
   CheckCircle2,
   ChevronDown,
   CircleUserRound,
@@ -28,7 +27,13 @@ import {
 } from "lucide-react";
 import "./governance.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
-import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
+import {
+  useWorkspaceLanguage,
+  WorkspaceHeaderLink,
+  WorkspaceSearch,
+  WorkspaceSectionLink,
+  WorkspaceSignOut,
+} from "@/components/workspace-utilities";
 
 const districts = [
   { name: "Dehradun", learners: 1240, ready: 72, placed: 184, retained: 88 },
@@ -70,7 +75,7 @@ const reviews = [
 ];
 
 export default function Governance() {
-  const {lang,toggleLanguage}=useWorkspaceLanguage();
+  const { lang, toggleLanguage } = useWorkspaceLanguage();
   const c =
     lang === "en"
       ? {
@@ -97,7 +102,11 @@ export default function Governance() {
             <small>PROGRAM GOVERNANCE</small>
           </div>
         </Link>
-        <Link href="/workspace/settings" className="program" aria-label="Open government program settings">
+        <Link
+          href="/workspace/settings"
+          className="program"
+          aria-label="Open government program settings"
+        >
           <MapPinned />
           <p>
             <b>Uttarakhand Skills Mission</b>
@@ -107,26 +116,24 @@ export default function Governance() {
         </Link>
         <nav>
           {[
-            [LayoutDashboard, "Overview","government-overview"],
-            [MapPinned, "Districts","government-districts"],
-            [Building2, "Institutes","government-districts"],
-            [TrendingUp, "Demand signals","government-demand"],
-            [Scale, "Fairness","government-fairness"],
-            [ShieldCheck, "AI governance","government-fairness"],
-            [FileWarning, "Grievances","government-reviews"],
-            [Database, "Data exports","government-exports"],
-          ].map(([Icon, label,target], i) => {
+            [LayoutDashboard, "Overview", "government-overview"],
+            [MapPinned, "District network", "government-districts"],
+            [TrendingUp, "Demand signals", "government-demand"],
+            [Scale, "Fairness & AI governance", "government-fairness"],
+            [FileWarning, "Grievances", "government-reviews"],
+            [Database, "Data exports", "government-exports"],
+          ].map(([Icon, label, target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
-              <a
-                className={i === 0 ? "active" : ""}
+              <WorkspaceSectionLink
                 href={`#${String(target)}`}
+                overview={i === 0}
                 key={String(label)}
               >
                 <I />
                 {String(label)}
                 {i === 6 && <em>3</em>}
-              </a>
+              </WorkspaceSectionLink>
             );
           })}
         </nav>
@@ -135,7 +142,7 @@ export default function Governance() {
             <Settings />
             Program settings
           </Link>
-          <WorkspaceSignOut/>
+          <WorkspaceSignOut />
           <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
@@ -147,13 +154,34 @@ export default function Governance() {
       </aside>
       <section className="gov-main">
         <header>
-          <WorkspaceSearch placeholder="Search district, institute or metric…" targets={{"district|institute|placement":"government-districts","demand|skill|employer":"government-demand","fairness|model|ai":"government-fairness","grievance|review|case":"government-reviews","export|data|audit":"government-exports"}}/>
+          <WorkspaceSearch
+            placeholder="Search district, institute or metric…"
+            targets={{
+              "district|institute|placement": "government-districts",
+              "demand|skill|employer": "government-demand",
+              "fairness|model|ai": "government-fairness",
+              "grievance|review|case": "government-reviews",
+              "export|data|audit": "government-exports",
+            }}
+          />
           <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <WorkspaceHeaderLink href="/workspace/notifications" label="Government notifications" className="alerts"><Bell/><i/></WorkspaceHeaderLink>
-          <WorkspaceHeaderLink href="/workspace/settings" label="Government account settings"><CircleUserRound/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/notifications"
+            label="Government notifications"
+            className="alerts"
+          >
+            <Bell />
+            <i />
+          </WorkspaceHeaderLink>
+          <WorkspaceHeaderLink
+            href="/workspace/settings"
+            label="Government account settings"
+          >
+            <CircleUserRound />
+          </WorkspaceHeaderLink>
         </header>
         <div className="gov-content" id="government-overview">
           <div className="gov-welcome">
@@ -194,8 +222,20 @@ export default function Governance() {
           </div>
           <div className="gov-kpis">
             {[
-              [Users, "Activated learners", "3,665", "+11% this quarter", "government-districts"],
-              [Gauge, "Role readiness", "68%", "+7 points", "government-fairness"],
+              [
+                Users,
+                "Activated learners",
+                "3,665",
+                "+11% this quarter",
+                "government-districts",
+              ],
+              [
+                Gauge,
+                "Role readiness",
+                "68%",
+                "+7 points",
+                "government-fairness",
+              ],
               [
                 CheckCircle2,
                 "Verified placements",
@@ -203,18 +243,30 @@ export default function Governance() {
                 "86% retained at 90d",
                 "government-districts",
               ],
-              [Activity, "Platform health", "99.96%", "2 open incidents", "government-reviews"],
+              [
+                Activity,
+                "Platform health",
+                "99.96%",
+                "2 open incidents",
+                "government-reviews",
+              ],
             ].map(([Icon, label, value, note, target]) => {
               const I = Icon as typeof Users;
               return (
-                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
-                  <div>
-                    <I />
-                    <span>{String(label)}</span>
-                  </div>
-                  <b>{String(value)}</b>
-                  <small>{String(note)}</small>
-                </article></a>
+                <a
+                  className="workspace-kpi"
+                  href={`#${String(target)}`}
+                  key={String(label)}
+                >
+                  <article>
+                    <div>
+                      <I />
+                      <span>{String(label)}</span>
+                    </div>
+                    <b>{String(value)}</b>
+                    <small>{String(note)}</small>
+                  </article>
+                </a>
               );
             })}
           </div>
