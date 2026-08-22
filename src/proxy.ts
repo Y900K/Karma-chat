@@ -44,6 +44,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
   let response = NextResponse.next({ request });
+  const sessionCookiePresent = request.cookies
+    .getAll()
+    .some(({ name }) => name.startsWith("sb-") && name.includes("-auth-token"));
+  if (!sessionCookiePresent && isProtected) {
+    const login = request.nextUrl.clone();
+    login.pathname = "/auth";
+    login.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(login);
+  }
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
@@ -56,15 +65,10 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  const userId = claimsError ? null : claimsData?.claims?.sub;
-  if (!userId && isProtected) {
-    const login = request.nextUrl.clone();
-    login.pathname = "/auth";
-    login.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(login);
-  }
-  if (userId && request.nextUrl.pathname === "/auth") {
+  if (sessionCookiePresent && request.nextUrl.pathname === "/auth") {
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+    const userId = claimsError ? null : claimsData?.claims?.sub;
+    if (!userId) return response;
     const { data: account } = await supabase
       .from("user_accounts")
       .select("persona,status")

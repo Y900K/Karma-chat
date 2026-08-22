@@ -33,17 +33,25 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   }
   const { data, error } = await sb.auth.getClaims();
   const claims = data?.claims;
-  if (error || !claims?.sub) return null;
-  const { data: account } = await sb
+  let userId = !error && claims?.sub ? claims.sub : null;
+  let email = !error && typeof claims?.email === "string" ? claims.email : null;
+  if (!userId) {
+    const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+    if (sessionError || !sessionData.session?.user.id) return null;
+    userId = sessionData.session.user.id;
+    email = sessionData.session.user.email ?? null;
+  }
+  const { data: account, error: accountError } = await sb
     .from("user_accounts")
     .select("persona,status")
-    .eq("user_id", claims.sub)
+    .eq("user_id", userId)
     .maybeSingle();
+  if (accountError || !account) return null;
   if (account?.status && account.status !== "active")
     throw new AuthError("Account is not active", 403);
   return {
-    id: claims.sub,
-    email: typeof claims.email === "string" ? claims.email : null,
+    id: userId,
+    email,
     persona: (account?.persona ?? "learner") as Persona,
     demo: false,
   };

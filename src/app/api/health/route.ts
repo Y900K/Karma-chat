@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const responseHeaders = { "cache-control": "no-store" };
+const revision = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
 
 export async function GET() {
   const supabase = createAdminClient();
@@ -11,6 +12,7 @@ export async function GET() {
       {
         status: "degraded",
         service: "karmasetu-web",
+        revision,
         database: "not_configured",
         timestamp: new Date().toISOString(),
       },
@@ -32,6 +34,7 @@ export async function GET() {
       {
         status: error ? "degraded" : "ok",
         service: "karmasetu-web",
+        revision,
         database: error ? "unavailable" : "ok",
         timestamp: new Date().toISOString(),
       },
@@ -46,6 +49,7 @@ export async function GET() {
       {
         status: "degraded",
         service: "karmasetu-web",
+        revision,
         database: "unavailable",
         timestamp: new Date().toISOString(),
       },

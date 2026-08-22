@@ -79,11 +79,14 @@ test("password login establishes the SSR session before navigation", async () =>
   assert.doesNotMatch(authPage, /router\.push\(destinations/);
 });
 
-test("protected navigation verifies cached JWT claims instead of repeating user lookups", async () => {
+test("protected navigation avoids duplicate remote user lookups", async () => {
   const proxy = await readFile(join(root, "src/proxy.ts"), "utf8");
   const dal = await readFile(join(root, "src/lib/auth/dal.ts"), "utf8");
+  assert.match(proxy, /sessionCookiePresent/);
   assert.match(proxy, /auth\.getClaims\(\)/);
   assert.match(dal, /auth\.getClaims\(\)/);
+  assert.match(dal, /auth\.getSession\(\)/);
+  assert.match(dal, /accountError \|\| !account/);
   assert.doesNotMatch(proxy, /auth\.getUser\(\)/);
   assert.doesNotMatch(dal, /auth\.getUser\(\)/);
 });
