@@ -200,9 +200,9 @@ export default function Dashboard() {
             <Link href="/settings">
               <Settings /> Settings
             </Link>
-            <Link href="/auth/signout">
-              <LogOut /> Sign out
-          </Link>
+            <form action="/auth/signout" method="post">
+              <button className="signout-button" type="submit"><LogOut /> Sign out</button>
+            </form>
           <div className="profile-mini">
             <CircleUserRound />
             <span>

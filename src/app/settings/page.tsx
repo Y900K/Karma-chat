@@ -147,10 +147,12 @@ export default function SettingsPage() {
               );
             })}
           </nav>
-          <Link className="logout" href="/auth/signout">
+          <form action="/auth/signout" method="post">
+          <button className="logout" type="submit">
             <LogOut />
             Sign out
-          </Link>
+          </button>
+          </form>
         </aside>
         <section className="set-main">
           <div className="set-title">

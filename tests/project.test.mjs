@@ -79,6 +79,16 @@ test("password login establishes the SSR session before navigation", async () =>
   assert.doesNotMatch(authPage, /router\.push\(destinations/);
 });
 
+test("sign out cannot be triggered by Next link prefetch", async () => {
+  const route = await readFile(join(root, "src/app/auth/signout/route.ts"), "utf8");
+  const dashboard = await readFile(join(root, "src/app/dashboard/page.tsx"), "utf8");
+  const settings = await readFile(join(root, "src/app/settings/page.tsx"), "utf8");
+  assert.match(route, /export async function POST/);
+  assert.doesNotMatch(route, /export async function GET/);
+  assert.match(dashboard, /action="\/auth\/signout" method="post"/);
+  assert.match(settings, /action="\/auth\/signout" method="post"/);
+});
+
 test("protected navigation avoids duplicate remote user lookups", async () => {
   const proxy = await readFile(join(root, "src/proxy.ts"), "utf8");
   const dal = await readFile(join(root, "src/lib/auth/dal.ts"), "utf8");
