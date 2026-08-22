@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { submitApplication } from "@/app/actions/learner";
-import { createClient } from "@/lib/supabase/client";
+import {z} from "zod";
 import "./opportunities.css";
 
 type Lang = "en" | "hi";
@@ -43,6 +43,7 @@ type Job = {
   shift: string;
   posted: string;
 };
+const opportunityPageSchema=z.object({items:z.array(z.object({id:z.string(),role:z.string(),company:z.string(),location:z.string(),salary:z.string(),type:z.string(),match:z.number(),verified:z.boolean(),skills:z.array(z.string()),missing:z.array(z.string()),why:z.array(z.string()),shift:z.string(),posted:z.string()})),nextCursor:z.string().nullable(),appliedJobIds:z.array(z.string())});
 export default function Opportunities() {
   const [lang, setLang] = useState<Lang>("en"),
     [jobs, setJobs] = useState<Job[]>([]),
@@ -53,77 +54,25 @@ export default function Opportunities() {
     [consent, setConsent] = useState(false),
     [applied, setApplied] = useState<string[]>([]),
     [busy, setBusy] = useState(false),
+    [nextCursor,setNextCursor]=useState<string|null>(null),
+    [loadingMore,setLoadingMore]=useState(false),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
     const initial = window.setTimeout(async () => {
-      const supabase = createClient();
-      if (!supabase) {
-        setError("Opportunity data is not configured.");
-        setLoading(false);
-        return;
-      }
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setError("Please sign in to view your matches.");
-        setLoading(false);
-        return;
-      }
-      const [matchResult, applicationResult] = await Promise.all([
-        supabase
-          .from("opportunity_matches")
-          .select("score,explanation,missing_signals,jobs(id,title,location,work_type,shift_details,salary_min,salary_max,currency,requirements,organizations(name,verification_status))")
-          .eq("user_id", user.id)
-          .order("score", { ascending: false }),
-        supabase.from("applications").select("job_id").eq("user_id", user.id),
-      ]);
-      if (matchResult.error || applicationResult.error) {
+      const response=await fetch("/api/opportunities?limit=20",{headers:{accept:"application/json"}});
+      const parsed=opportunityPageSchema.safeParse(await response.json().catch(()=>null));
+      if(!response.ok||!parsed.success){
         setError("Your live opportunity matches could not be loaded.");
         setLoading(false);
         return;
       }
-      const mapped = (matchResult.data ?? []).flatMap((row) => {
-        const job = row.jobs as unknown as {
-          id: string;
-          title: string;
-          location: string;
-          work_type: string;
-          shift_details: string | null;
-          salary_min: number;
-          salary_max: number;
-          currency: string;
-          requirements: unknown;
-          organizations: { name: string; verification_status: string } | null;
-        } | null;
-        if (!job) return [];
-        const requirements = job.requirements as { skills?: string[] } | string[] | null;
-        const explanation = row.explanation as { reasons?: string[] } | string[] | null;
-        const missing = row.missing_signals as { labels?: string[] } | string[] | null;
-        return [{
-          id: job.id,
-          role: job.title,
-          company: job.organizations?.name ?? "Verified employer",
-          location: job.location,
-          salary: `₹${job.salary_min.toLocaleString("en-IN")}–${job.salary_max.toLocaleString("en-IN")} / month`,
-          type: job.work_type.replaceAll("_", " "),
-          match: row.score,
-          verified: job.organizations?.verification_status === "verified",
-          skills: Array.isArray(requirements) ? requirements : requirements?.skills ?? [],
-          missing: Array.isArray(missing) ? missing : missing?.labels ?? [],
-          why: Array.isArray(explanation) ? explanation : explanation?.reasons ?? ["Matched from your current verified Skill Graph"],
-          shift: job.shift_details ?? "See role details",
-          posted: "Live listing",
-        } satisfies Job];
-      });
-      setJobs(mapped);
-      setSelected(mapped[0] ?? null);
-      setApplied((applicationResult.data ?? []).map((item) => item.job_id));
+      setJobs(parsed.data.items);setSelected(parsed.data.items[0]??null);setApplied(parsed.data.appliedJobIds);setNextCursor(parsed.data.nextCursor);
       setLoading(false);
     }, 0);
     return () => window.clearTimeout(initial);
   }, []);
+  const loadMore=async()=>{if(!nextCursor||loadingMore)return;setLoadingMore(true);setError("");try{const response=await fetch(`/api/opportunities?limit=20&cursor=${encodeURIComponent(nextCursor)}`),parsed=opportunityPageSchema.safeParse(await response.json().catch(()=>null));if(!response.ok||!parsed.success)throw new Error("Invalid opportunity page");setJobs(current=>[...current,...parsed.data.items.filter(item=>!current.some(existing=>existing.id===item.id))]);setNextCursor(parsed.data.nextCursor)}catch{setError("More opportunity matches could not be loaded.")}finally{setLoadingMore(false)}};
   const filtered = useMemo(
     () =>
       jobs.filter(
@@ -281,6 +230,7 @@ export default function Opportunities() {
               </strong>
             </button>
           ))}
+          {nextCursor&&<button className="pw-primary" onClick={loadMore} disabled={loadingMore}>{loadingMore?"Loading more…":"Load more opportunities"}</button>}
         </aside>
         <article className="opp-detail">
           <div className="detail-top">

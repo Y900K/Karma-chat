@@ -207,6 +207,7 @@ function SkillGraph() {
     <div
       ref={mount}
       className="skill-graph"
+      role="img"
       aria-label="Animated 3D skill graph"
     />
   );

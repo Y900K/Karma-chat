@@ -23,3 +23,5 @@ jobs:
         env:
           NEXT_PUBLIC_SITE_URL: https://preview.invalid
           NVIDIA_MODEL: meta/llama-3.3-70b-instruct
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

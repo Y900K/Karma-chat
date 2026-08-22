@@ -9,7 +9,6 @@ const protectedRoutes = [
   "/evidence",
   "/interview",
   "/opportunities",
-  "/roles",
   "/portfolio",
   "/resume",
   "/schedule",

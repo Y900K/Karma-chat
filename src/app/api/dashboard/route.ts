@@ -121,27 +121,24 @@ async function instituteDashboard(userId: string) {
   const membership = await getMembership("organization_memberships", userId);
   if (!membership) return { organization: null, metrics: { cohorts: 0, learners: 0, openSupportActions: 0 }, cohorts: [] };
 
-  const [organization, cohorts, support] = await Promise.all([
+  const [organization, cohorts, snapshots, support] = await Promise.all([
     supabase.from("organizations").select("name,verification_status").eq("id", membership.organization_id).single(),
     supabase
       .from("cohorts")
-      .select("id,name,trade,semester,status,cohort_metric_snapshots(captured_on,learner_count,readiness_percent,engagement_percent,evidence_percent,application_count,offer_count)")
+      .select("id,name,trade,semester,status")
       .eq("organization_id", membership.organization_id)
       .eq("status", "active"),
+    supabase.from("cohort_latest_metric_snapshots").select("cohort_id,captured_on,learner_count,readiness_percent,engagement_percent,evidence_percent,application_count,offer_count"),
     supabase
       .from("learner_support_actions")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", membership.organization_id)
       .in("status", ["open", "assigned"]),
   ]);
-  if (organization.error || cohorts.error || support.error) throw organization.error ?? cohorts.error ?? support.error;
+  if (organization.error || cohorts.error || snapshots.error || support.error) throw organization.error ?? cohorts.error ?? snapshots.error ?? support.error;
   const cohortRows = cohorts.data ?? [];
-  const latestSnapshots = cohortRows.map((cohort) => {
-    const snapshots = [...(cohort.cohort_metric_snapshots ?? [])].sort((a, b) =>
-      String(b.captured_on).localeCompare(String(a.captured_on)),
-    );
-    return { ...cohort, cohort_metric_snapshots: undefined, latestSnapshot: snapshots[0] ?? null };
-  });
+  const snapshotByCohort=new Map((snapshots.data??[]).map(snapshot=>[snapshot.cohort_id,snapshot]));
+  const latestSnapshots = cohortRows.map((cohort) => ({...cohort,latestSnapshot:snapshotByCohort.get(cohort.id)??null}));
   return {
     organization: { ...organization.data, role: membership.role },
     metrics: {

@@ -84,7 +84,13 @@ test("opportunity applications use live matches instead of fictional job ids", a
     join(root, "src/app/opportunities/page.tsx"),
     "utf8",
   );
-  assert.match(opportunities, /from\("opportunity_matches"\)/);
+  const opportunitiesApi = await readFile(
+    join(root, "src/app/api/opportunities/route.ts"),
+    "utf8",
+  );
+  assert.match(opportunities, /fetch\("\/api\/opportunities/);
+  assert.match(opportunitiesApi, /from\("opportunity_matches"\)/);
+  assert.match(opportunitiesApi, /nextCursor/);
   assert.doesNotMatch(opportunities, /apex-junior-electrical/);
   assert.doesNotMatch(opportunities, /shivam-maintenance-apprentice/);
 });

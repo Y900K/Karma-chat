@@ -1,0 +1,7 @@
+import {NextRequest,NextResponse} from "next/server";
+import {AuthError,requireViewer} from "@/lib/auth/dal";
+import {createClient} from "@/lib/supabase/server";
+import {decodeCursor,encodeCursor,pageLimit} from "@/lib/pagination";
+
+export async function GET(request:NextRequest){try{const viewer=await requireViewer(),url=new URL(request.url),cursor=decodeCursor(url.searchParams.get("cursor")),limit=pageLimit(url.searchParams.get("limit"));const sb=await createClient();if(!sb)return NextResponse.json({error:"Service unavailable"},{status:503});let query=sb.from("notifications").select("id,category,priority,title,body,action_url,action_label,read_at,created_at").eq("user_id",viewer.id).is("archived_at",null).order("created_at",{ascending:false}).order("id",{ascending:false}).limit(limit+1);if(cursor)query=query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`);const{data,error}=await query;if(error)throw error;const rows=data||[],hasMore=rows.length>limit,items=rows.slice(0,limit),last=items.at(-1);return NextResponse.json({items,nextCursor:hasMore&&last?encodeCursor({createdAt:last.created_at,id:last.id}):null},{headers:{"cache-control":"private, no-store"}})}catch(error){if(error instanceof AuthError)return NextResponse.json({error:error.message},{status:error.status});return NextResponse.json({error:"Unable to load notifications"},{status:500})}}
+

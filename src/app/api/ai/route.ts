@@ -4,6 +4,7 @@ import { AuthError, requireViewer } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createChatCompletion } from "@/lib/ai/nvidia";
 import { retrieveApprovedContext } from "@/lib/ai/retrieval";
+import {consumeRateLimit,requestIp} from "@/lib/rate-limit";
 
 export const maxDuration = 30;
 const requestSchema = z
@@ -69,6 +70,11 @@ export async function POST(request: NextRequest) {
         { status: 413 },
       );
     const viewer = await requireViewer();
+    const [userLimit,ipLimit]=await Promise.all([
+      consumeRateLimit({subjectType:"user",subject:viewer.id,action:"interactive_ai",limit:30,windowSeconds:3600}),
+      consumeRateLimit({subjectType:"ip",subject:requestIp(request),action:"interactive_ai",limit:90,windowSeconds:3600}),
+    ]);
+    if(!userLimit.allowed||!ipLimit.allowed)return NextResponse.json({error:"AI usage limit reached. Try again later.",requestId},{status:429,headers:{"x-request-id":requestId}});
     const raw = await request.json().catch(() => null),
       parsed = requestSchema.safeParse(raw);
     if (!parsed.success)
