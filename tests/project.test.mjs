@@ -84,6 +84,8 @@ test("protected navigation avoids duplicate remote user lookups", async () => {
   const dal = await readFile(join(root, "src/lib/auth/dal.ts"), "utf8");
   assert.match(proxy, /sessionCookiePresent/);
   assert.match(proxy, /auth\.getClaims\(\)/);
+  assert.match(proxy, /userId = claimsError \? null/);
+  assert.doesNotMatch(proxy, /!userId && isProtected/);
   assert.match(dal, /auth\.getSession\(\)/);
   assert.match(dal, /if \(accountResult\.error\) accountResult = await readAccount\(\)/);
   assert.match(dal, /Account authorization is temporarily unavailable/);

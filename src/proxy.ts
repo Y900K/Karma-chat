@@ -65,10 +65,12 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  if (sessionCookiePresent && request.nextUrl.pathname === "/auth") {
+  let userId: string | null = null;
+  if (sessionCookiePresent) {
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-    const userId = claimsError ? null : claimsData?.claims?.sub;
-    if (!userId) return response;
+    userId = claimsError ? null : (claimsData?.claims?.sub ?? null);
+  }
+  if (userId && request.nextUrl.pathname === "/auth") {
     const { data: account } = await supabase
       .from("user_accounts")
       .select("persona,status")
