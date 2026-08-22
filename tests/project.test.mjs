@@ -104,6 +104,7 @@ test("every non-learner workspace exposes real shared controls and visible secti
     "utf8",
   );
   const pilotCss = await readFile(join(root, "src/app/pilot.css"), "utf8");
+  const pilotCss = await readFile(join(root, "src/app/pilot.css"), "utf8");
   assert.match(utility, /action="\/auth\/signout" method="post"/);
   assert.match(utility, /\/api\/preferences/);
   assert.doesNotMatch(pilotCss, /display:\s*none\s*!important/);
@@ -307,6 +308,11 @@ test("workspace navigation has unique destinations and learner escape routes", a
   assert.match(utility, /aria-current/);
   assert.match(utility, /export function LearnerReturnLink/);
   assert.match(utility, /aria-label="Back to dashboard"/);
+  assert.match(
+    pilotCss,
+    /Keep primary workspace navigation reachable on phones/,
+  );
+  assert.match(pilotCss, /\.pilot-live > aside \{/);
   for (const route of ["institute", "employer", "governance", "admin"]) {
     const page = await readFile(
       join(root, `src/app/${route}/page.tsx`),

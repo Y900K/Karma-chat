@@ -30,3 +30,74 @@
 .adm-shell > section {
   padding: 0;
 }
+
+/* Keep primary workspace navigation reachable on phones. Role-specific styles
+ * collapse the rail, so it becomes a horizontally scrollable bottom bar. */
+@media (max-width: 720px) {
+  .pilot-live > aside {
+    display: block !important;
+    position: fixed !important;
+    inset: auto 0 0 !important;
+    width: 100% !important;
+    height: 66px !important;
+    min-height: 0 !important;
+    padding: 7px 8px !important;
+    background: #061d31 !important;
+    border: 0 !important;
+    z-index: 100 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .pilot-live > aside > :not(nav) {
+    display: none !important;
+  }
+
+  .pilot-live > aside nav {
+    display: flex !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    min-width: max-content;
+  }
+
+  .pilot-live > aside nav a {
+    display: flex !important;
+    flex: 0 0 auto;
+    min-width: 58px;
+    height: 50px;
+    padding: 6px 9px !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px !important;
+    font-size: 9px !important;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .pilot-live > aside nav a.active {
+    background: #16364c !important;
+    color: #fff !important;
+    box-shadow: inset 0 3px #ffc526;
+  }
+
+  .pilot-live > aside nav a svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .pilot-live > aside nav a em {
+    position: absolute;
+    margin: -25px 0 0 25px !important;
+  }
+
+  .pilot-live > section,
+  .pilot-live > .dash-main,
+  .pilot-live > .inst-main,
+  .pilot-live > .emp-main,
+  .pilot-live > .gov-main,
+  .pilot-live > .adm-main {
+    padding-bottom: 72px !important;
+  }
+}
