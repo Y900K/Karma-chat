@@ -51,12 +51,17 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   const email = identity.email;
   // The decoded cookie payload is not authorization. This RLS-protected query
   // must validate its JWT and return only the matching auth.uid() account row.
-  const { data: account, error: accountError } = await sb
+  const readAccount = () => sb
     .from("user_accounts")
     .select("persona,status")
     .eq("user_id", userId)
     .maybeSingle();
-  if (accountError || !account) return null;
+  let accountResult = await readAccount();
+  if (accountResult.error) accountResult = await readAccount();
+  if (accountResult.error)
+    throw new AuthError("Account authorization is temporarily unavailable", 503);
+  const account = accountResult.data;
+  if (!account) return null;
   if (account?.status && account.status !== "active")
     throw new AuthError("Account is not active", 403);
   return {

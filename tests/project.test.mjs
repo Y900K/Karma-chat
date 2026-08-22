@@ -85,7 +85,8 @@ test("protected navigation avoids duplicate remote user lookups", async () => {
   assert.match(proxy, /sessionCookiePresent/);
   assert.match(proxy, /auth\.getClaims\(\)/);
   assert.match(dal, /auth\.getSession\(\)/);
-  assert.match(dal, /accountError \|\| !account/);
+  assert.match(dal, /if \(accountResult\.error\) accountResult = await readAccount\(\)/);
+  assert.match(dal, /Account authorization is temporarily unavailable/);
   assert.match(dal, /decoded cookie payload is not authorization/);
   assert.doesNotMatch(proxy, /auth\.getUser\(\)/);
   assert.doesNotMatch(dal, /auth\.getUser\(\)/);
