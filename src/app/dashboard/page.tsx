@@ -27,10 +27,10 @@ import {
   Zap,
 } from "lucide-react";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
+import { useWorkspaceLanguage } from "@/components/workspace-utilities";
 import "./dashboard.css";
 import "./dashboard-fixes.css";
 
-type Lang = "en" | "hi";
 const content = {
   en: {
     hello: "Good afternoon, Aarav.",
@@ -110,7 +110,7 @@ const dimensions = [
 
 export default function Dashboard() {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>("en");
+  const { lang, toggleLanguage } = useWorkspaceLanguage();
   const [query, setQuery] = useState("");
   const [headerSearch, setHeaderSearch] = useState("");
   const [identity, setIdentity] = useState({ displayName: "Learner", trade: "Current pathway", semester: null as number | null });
@@ -221,7 +221,7 @@ export default function Dashboard() {
           </form>
           <button
             className="lang-switch"
-            onClick={() => setLang(lang === "en" ? "hi" : "en")}
+            onClick={toggleLanguage}
           >
             <Languages /> {lang === "en" ? "हिंदी" : "EN"}
           </button>

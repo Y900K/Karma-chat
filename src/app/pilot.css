@@ -1,26 +1,32 @@
-.pilot-live .welcome,
-.pilot-live .next-action,
-.pilot-live .dashboard-grid,
-.pilot-live .profile-mini span,
-.pilot-live .inst-welcome,
-.pilot-live .privacy-banner,
-.pilot-live .inst-kpis,
-.pilot-live .inst-grid,
-.pilot-live .inst-side-bottom > div,
-.pilot-live .emp-welcome,
-.pilot-live .trust,
-.pilot-live .emp-kpis,
-.pilot-live .emp-grid,
-.pilot-live .emp-side-bottom > div,
-.pilot-live .gov-welcome,
-.pilot-live .guardrail,
-.pilot-live .gov-kpis,
-.pilot-live .gov-grid,
-.pilot-live .gov-side-bottom > div,
-.pilot-live .adm-welcome,
-.pilot-live .ops-alert,
-.pilot-live .adm-kpis,
-.pilot-live .adm-grid,
-.pilot-live .adm-side-bottom > div {
-  display: none !important;
+/*
+ * The live status panel supplements each workspace; it must never replace the
+ * workspace itself. Earlier pilot CSS hid every operational section, leaving
+ * non-learner roles with a header and one metrics card only.
+ */
+.pilot-live [id] {
+  scroll-margin-top: 88px;
+}
+
+/* Reset the marketing site's absolute top navigation inside role sidebars. */
+.dash-sidebar nav,
+.inst-shell > aside nav,
+.emp-shell > aside nav,
+.gov-shell > aside nav,
+.adm-shell > aside nav {
+  position: static;
+  z-index: auto;
+  width: auto;
+  height: auto;
+  padding: 0;
+  color: inherit;
+  border: 0;
+}
+
+/* Marketing sections have generous storytelling padding; app shells do not. */
+.dash-shell > section,
+.inst-shell > section,
+.emp-shell > section,
+.gov-shell > section,
+.adm-shell > section {
+  padding: 0;
 }

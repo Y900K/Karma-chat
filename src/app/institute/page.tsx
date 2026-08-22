@@ -19,7 +19,6 @@ import {
   Languages,
   LayoutDashboard,
   LockKeyhole,
-  Search,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -30,8 +29,8 @@ import {
 } from "lucide-react";
 import "./institute.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
+import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
 
-type Lang = "en" | "hi";
 const cohorts = [
   {
     name: "Electrician · Semester 4",
@@ -93,8 +92,8 @@ const gaps = [
 ];
 
 export default function Institute() {
-  const [lang, setLang] = useState<Lang>("en"),
-    [cohort, setCohort] = useState(0),
+  const {lang,toggleLanguage}=useWorkspaceLanguage();
+  const [cohort, setCohort] = useState(0),
     [privacy, setPrivacy] = useState(true);
   const c =
     lang === "en"
@@ -134,29 +133,29 @@ export default function Institute() {
             <small>INSTITUTE WORKSPACE</small>
           </div>
         </Link>
-        <div className="institute-name">
+        <Link href="/workspace/settings" className="institute-name" aria-label="Open institute workspace settings">
           <Building2 />
           <p>
             <b>Government ITI Dehradun</b>
             <small>Verified institute · Pilot</small>
           </p>
           <ChevronDown />
-        </div>
+        </Link>
         <nav>
           {[
-            [LayoutDashboard, "Overview"],
-            [Users, "Learners"],
-            [GraduationCap, "Cohorts"],
-            [BookOpen, "Learning"],
-            [FileBadge2, "Evidence review"],
-            [Target, "Placements"],
-            [BarChart3, "Reports"],
-          ].map(([Icon, label], i) => {
+            [LayoutDashboard, "Overview","institute-overview"],
+            [Users, "Learners","institute-learners"],
+            [GraduationCap, "Cohorts","institute-cohorts"],
+            [BookOpen, "Learning","institute-learning"],
+            [FileBadge2, "Evidence review","institute-learners"],
+            [Target, "Placements","institute-placements"],
+            [BarChart3, "Reports","institute-reports"],
+          ].map(([Icon, label,target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
               <a
                 className={i === 0 ? "active" : ""}
-                href={`#${label}`}
+                href={`#${String(target)}`}
                 key={String(label)}
               >
                 <I />
@@ -167,36 +166,31 @@ export default function Institute() {
           })}
         </nav>
         <div className="inst-side-bottom">
-          <a href="#settings">
+          <Link href="/workspace/settings">
             <Settings />
             Workspace settings
-          </a>
-          <div>
+          </Link>
+          <WorkspaceSignOut/>
+          <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
               <b>Anita Verma</b>
               <small>Placement Officer</small>
             </p>
-          </div>
+          </Link>
         </div>
       </aside>
       <section className="inst-main">
         <header>
-          <label>
-            <Search />
-            <input placeholder="Search learner, cohort or employer…" />
-          </label>
-          <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+          <WorkspaceSearch placeholder="Search learner, cohort or employer…" targets={{"learner|evidence":"institute-learners","cohort|report":"institute-cohorts","learning|skill":"institute-learning","placement|employer":"institute-placements"}}/>
+          <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <button className="notify">
-            <Bell />
-            <i />
-          </button>
-          <CircleUserRound />
+          <WorkspaceHeaderLink href="/workspace/notifications" label="Institute notifications" className="notify"><Bell/><i/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink href="/workspace/settings" label="Institute account settings"><CircleUserRound/></WorkspaceHeaderLink>
         </header>
-        <div className="inst-content">
+        <div className="inst-content" id="institute-overview">
           <div className="inst-welcome">
             <div>
               <p>
@@ -236,14 +230,14 @@ export default function Institute() {
           </div>
           <div className="inst-kpis">
             {[
-              [TrendingUp, c.readiness, "68%", "+6 pts", "Target: 75%"],
-              [BookOpen, c.engagement, "78%", "+9%", "104 active this week"],
-              [FileBadge2, c.evidence, "57%", "+14", "72 verified projects"],
-              [Target, c.placements, "31", "+8", "11 interviews scheduled"],
-            ].map(([Icon, label, value, delta, note]) => {
+              [TrendingUp, c.readiness, "68%", "+6 pts", "Target: 75%", "institute-reports"],
+              [BookOpen, c.engagement, "78%", "+9%", "104 active this week", "institute-learning"],
+              [FileBadge2, c.evidence, "57%", "+14", "72 verified projects", "institute-learners"],
+              [Target, c.placements, "31", "+8", "11 interviews scheduled", "institute-placements"],
+            ].map(([Icon, label, value, delta, note, target]) => {
               const I = Icon as typeof TrendingUp;
               return (
-                <article key={String(label)}>
+                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
                   <div>
                     <I />
                     <span>{String(label)}</span>
@@ -251,12 +245,12 @@ export default function Institute() {
                   <b>{String(value)}</b>
                   <em>{String(delta)}</em>
                   <small>{String(note)}</small>
-                </article>
+                </article></a>
               );
             })}
           </div>
           <div className="inst-grid">
-            <article className="readiness-chart">
+            <article className="readiness-chart" id="institute-reports">
               <div className="inst-card-head">
                 <div>
                   <p>READINESS TREND</p>
@@ -319,7 +313,7 @@ export default function Institute() {
                 </p>
               </div>
             </article>
-            <article className="gap-card">
+            <article className="gap-card" id="institute-learning">
               <div className="inst-card-head">
                 <div>
                   <p>COHORT SIGNALS</p>
@@ -359,13 +353,13 @@ export default function Institute() {
                 </button>
               </div>
             </article>
-            <article className="interventions">
+            <article className="interventions" id="institute-learners">
               <div className="inst-card-head">
                 <div>
                   <p>SUPPORT QUEUE</p>
                   <h2>{c.priority}</h2>
                 </div>
-                <a href="#all">
+                <a href="#institute-learners">
                   View all 18
                   <ArrowRight />
                 </a>
@@ -415,13 +409,13 @@ export default function Institute() {
                 </span>
               </div>
             </article>
-            <article className="cohort-card">
+            <article className="cohort-card" id="institute-cohorts">
               <div className="inst-card-head">
                 <div>
                   <p>PROGRAM VIEW</p>
                   <h2>{c.cohorts}</h2>
                 </div>
-                <a href="#cohorts">
+                <a href="#institute-cohorts">
                   Manage cohorts
                   <ArrowRight />
                 </a>
@@ -457,7 +451,7 @@ export default function Institute() {
                 </div>
               ))}
             </article>
-            <article className="pipeline-card">
+            <article className="pipeline-card" id="institute-placements">
               <div className="inst-card-head">
                 <div>
                   <p>PLACEMENT OUTCOMES</p>

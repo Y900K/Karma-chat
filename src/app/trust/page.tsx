@@ -1,10 +1,418 @@
 "use client";
-import { FormEvent,useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Bot, Building2, CheckCircle2, ChevronDown, ExternalLink, FileText, Languages, LifeBuoy, LockKeyhole, Mail, Scale, Send, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Bot,
+  Building2,
+  CheckCircle2,
+  ChevronDown,
+  ExternalLink,
+  FileText,
+  Languages,
+  LifeBuoy,
+  LockKeyhole,
+  Mail,
+  Scale,
+  Send,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import "./trust.css";
 
-const principles=[{icon:ShieldCheck,title:"Learner ownership",text:"Learners control profile visibility, consent and employer identity sharing."},{icon:Bot,title:"AI assists—never rejects",text:"AI explains readiness and recommendations. A human remains accountable for high-impact decisions."},{icon:Scale,title:"Job-related fairness",text:"Matching excludes protected or irrelevant traits and is monitored for outcome disparities."},{icon:LockKeyhole,title:"Minimum necessary data",text:"Partners receive only the information needed for a declared, time-bound purpose."}];
-const partners=[{name:"Government ITI Dehradun",kind:"Institute",check:"Domain + authorization verified"},{name:"Shakti Auto Components",kind:"Employer",check:"Business + recruiter verified"},{name:"Uttarakhand Skills Mission",kind:"Program",check:"Reporting scope approved"}];
-export default function Trust(){const[lang,setLang]=useState<"en"|"hi">("en"),[sent,setSent]=useState(false),[faq,setFaq]=useState<number|null>(0);const c=lang==="en"?{title:"Trust should be visible—not buried in fine print.",sub:"See how KarmaSetu uses data, measures impact, governs AI and gives every learner a way to question a decision.",report:"Report a concern"}:{title:"Trust साफ़ दिखना चाहिए—fine print में छिपा नहीं।",sub:"देखें KarmaSetu data कैसे use करता है, impact कैसे measure करता है, AI को कैसे govern करता है और हर learner को decision पर सवाल करने का रास्ता कैसे देता है।",report:"Concern report करें"};const submit=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const f=new FormData(e.currentTarget),sb=createClient();if(sb)await sb.from("public_trust_reports").insert({report_type:f.get("type"),contact_email:f.get("email")||null,summary:f.get("summary"),preferred_language:lang,consent_to_contact:Boolean(f.get("contact"))});setSent(true)};return <main className="trust-shell"><nav><Link href="/" className="trust-brand"><span>क</span><div>KarmaSetu <b>AI</b><small>PUBLIC TRUST CENTER</small></div></Link><div><a href="#privacy">Privacy</a><a href="#ai">AI transparency</a><a href="#impact">Impact</a><a href="#help">Help</a><button onClick={()=>setLang(lang==="en"?"hi":"en")}><Languages/>{lang==="en"?"हिंदी + EN":"EN + हिंदी"}</button><Link href="/auth">Sign in<ArrowRight/></Link></div></nav><header className="trust-hero"><p><Sparkles/>PUBLIC COMMITMENTS · VERSION 2026-08</p><h1>{c.title}</h1><span>{c.sub}</span><div><a href="#privacy">Read our commitments<ArrowRight/></a><a href="#report">{c.report}</a></div></header><section className="principles" id="privacy">{principles.map(x=><article key={x.title}><x.icon/><h2>{x.title}</h2><p>{x.text}</p></article>)}</section><section className="document-grid"><article><div className="section-head"><FileText/><div><p>PLAIN-LANGUAGE POLICIES</p><h2>Know your rights and our duties.</h2></div></div>{[["Privacy notice","What we collect, why, retention, sharing and your rights."],["Terms of use","Account conduct, platform limits, employer rules and dispute process."],["Accessibility statement","WCAG direction, accommodations and how to report a barrier."],["Data retention schedule","How long each record category is kept and why."]].map(([x,y])=><button key={x}><p><b>{x}</b><span>{y}</span></p><ArrowRight/></button>)}</article><article id="ai"><div className="section-head"><Bot/><div><p>AI TRANSPARENCY</p><h2>What AI does—and never decides.</h2></div></div><div className="does"><div><b><CheckCircle2/>AI may</b><ul><li>Explain diagnostic and readiness signals</li><li>Recommend approved learning resources</li><li>Structure interview practice feedback</li><li>Explain role-skill overlap and missing evidence</li></ul></div><div><b><LockKeyhole/>AI may not</b><ul><li>Reject a learner from a real opportunity</li><li>Invent credentials or work experience</li><li>Use protected or irrelevant traits</li><li>Promise employment, wages or selection</li></ul></div></div><a href="#model">Open the public model card<ExternalLink/></a></article></section><section className="impact" id="impact"><div className="section-head"><BarChart3/><div><p>PRIVACY-SAFE IMPACT</p><h2>How the pilot is progressing.</h2></div></div><div className="impact-cards"><div><b>3,665</b><span>Activated learners</span><small>Verified account + onboarding</small></div><div><b>68%</b><span>Role readiness</span><small>Role-specific, v0.4.2</small></div><div><b>511</b><span>Verified placements</span><small>Learner-confirmed joining</small></div><div><b>86%</b><span>90-day retention</span><small>Eligible follow-ups only</small></div></div><div className="methodology"><ShieldCheck/><p><b>Methodology matters</b><span>Metrics suppress groups under 10, distinguish missing follow-up from negative outcomes, and publish model/version changes. No individual rankings appear here.</span></p><button>Read outcome methodology<ArrowRight/></button></div></section><section className="partner-help"><article><div className="section-head"><Building2/><div><p>VERIFIED NETWORK</p><h2>Pilot partners</h2></div></div>{partners.map(x=><div className="trust-partner" key={x.name}><i><Building2/></i><p><b>{x.name}</b><span>{x.kind} · {x.check}</span></p><ShieldCheck/></div>)}<button>View verification standard<ArrowRight/></button></article><article id="help"><div className="section-head"><LifeBuoy/><div><p>HELP CENTER</p><h2>Clear answers, human support.</h2></div></div>{[["How is my JobReady Index calculated?","It combines role-specific, dated evidence and shows each dimension, source, confidence and improvement action."],["Can an employer see my contact details?","Not until you accept a purpose-bound access request from a verified employer."],["How do I challenge incorrect feedback?","Open a correction or appeal from your account, or use the public concern form below."]].map(([q,a],i)=><div className="faq" key={q}><button onClick={()=>setFaq(faq===i?null:i)}><b>{q}</b><ChevronDown/></button>{faq===i&&<p>{a}</p>}</div>)}<a href="mailto:support@karmasetu.ai"><Mail/>Contact human support</a></article></section><section className="report" id="report"><div><p>GRIEVANCE & SAFETY REPORTING</p><h2>{c.report}</h2><span>Report incorrect data, unfair treatment, unsafe content, accessibility barriers or suspected misuse. You can report without an account.</span><div><ShieldCheck/><p><b>No retaliation</b>Your report will not lower scores, hide opportunities or affect institute access.</p></div></div>{sent?<div className="report-sent"><CheckCircle2/><h3>Report received.</h3><p>Reference: KS-TRUST-2026-0821. Save this number for follow-up.</p><button onClick={()=>setSent(false)}>Submit another report</button></div>:<form onSubmit={submit}><label>Concern type<select name="type" required><option value="incorrect_data">Incorrect data</option><option value="fairness">Fairness or discrimination</option><option value="privacy">Privacy or consent</option><option value="accessibility">Accessibility barrier</option><option value="unsafe_content">Unsafe content</option><option value="other">Other</option></select></label><label>Email for follow-up (optional)<input name="email" type="email" placeholder="you@example.com"/></label><label>What happened?<textarea name="summary" required minLength={20} placeholder="Do not include passwords or highly sensitive documents."/></label><label className="contact"><input name="contact" type="checkbox"/>KarmaSetu may contact me about this report.</label><button><Send/>Submit securely</button></form>}</section><footer><div className="trust-brand"><span>क</span><div>KarmaSetu <b>AI</b><small>कौशल से करियर तक</small></div></div><p>Evidence-led employability with human accountability.</p><div><a href="#privacy">Privacy</a><a href="#ai">AI transparency</a><a href="#report">Report concern</a><a href="mailto:hello@karmasetu.ai">Contact</a></div></footer></main>}
+const principles = [
+  {
+    icon: ShieldCheck,
+    title: "Learner ownership",
+    text: "Learners control profile visibility, consent and employer identity sharing.",
+  },
+  {
+    icon: Bot,
+    title: "AI assists—never rejects",
+    text: "AI explains readiness and recommendations. A human remains accountable for high-impact decisions.",
+  },
+  {
+    icon: Scale,
+    title: "Job-related fairness",
+    text: "Matching excludes protected or irrelevant traits and is monitored for outcome disparities.",
+  },
+  {
+    icon: LockKeyhole,
+    title: "Minimum necessary data",
+    text: "Partners receive only the information needed for a declared, time-bound purpose.",
+  },
+];
+const partners = [
+  {
+    name: "Government ITI Dehradun",
+    kind: "Institute",
+    check: "Domain + authorization verified",
+  },
+  {
+    name: "Shakti Auto Components",
+    kind: "Employer",
+    check: "Business + recruiter verified",
+  },
+  {
+    name: "Uttarakhand Skills Mission",
+    kind: "Program",
+    check: "Reporting scope approved",
+  },
+];
+export default function Trust() {
+  const [lang, setLang] = useState<"en" | "hi">("en"),
+    [sent, setSent] = useState(false),
+    [faq, setFaq] = useState<number | null>(0);
+  const c =
+    lang === "en"
+      ? {
+          title: "Trust should be visible—not buried in fine print.",
+          sub: "See how KarmaSetu uses data, measures impact, governs AI and gives every learner a way to question a decision.",
+          report: "Report a concern",
+        }
+      : {
+          title: "Trust साफ़ दिखना चाहिए—fine print में छिपा नहीं।",
+          sub: "देखें KarmaSetu data कैसे use करता है, impact कैसे measure करता है, AI को कैसे govern करता है और हर learner को decision पर सवाल करने का रास्ता कैसे देता है।",
+          report: "Concern report करें",
+        };
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget),
+      sb = createClient();
+    if (sb)
+      await sb
+        .from("public_trust_reports")
+        .insert({
+          report_type: f.get("type"),
+          contact_email: f.get("email") || null,
+          summary: f.get("summary"),
+          preferred_language: lang,
+          consent_to_contact: Boolean(f.get("contact")),
+        });
+    setSent(true);
+  };
+  return (
+    <main className="trust-shell">
+      <nav>
+        <Link href="/" className="trust-brand">
+          <span>क</span>
+          <div>
+            KarmaSetu <b>AI</b>
+            <small>PUBLIC TRUST CENTER</small>
+          </div>
+        </Link>
+        <div>
+          <a href="#privacy">Privacy</a>
+          <a href="#ai">AI transparency</a>
+          <a href="#impact">Impact</a>
+          <a href="#help">Help</a>
+          <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+            <Languages />
+            {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
+          </button>
+          <Link href="/auth">
+            Sign in
+            <ArrowRight />
+          </Link>
+        </div>
+      </nav>
+      <header className="trust-hero">
+        <p>
+          <Sparkles />
+          PUBLIC COMMITMENTS · VERSION 2026-08
+        </p>
+        <h1>{c.title}</h1>
+        <span>{c.sub}</span>
+        <div>
+          <a href="#privacy">
+            Read our commitments
+            <ArrowRight />
+          </a>
+          <a href="#report">{c.report}</a>
+        </div>
+      </header>
+      <section className="principles" id="privacy">
+        {principles.map((x) => (
+          <article key={x.title}>
+            <x.icon />
+            <h2>{x.title}</h2>
+            <p>{x.text}</p>
+          </article>
+        ))}
+      </section>
+      <section className="document-grid">
+        <article>
+          <div className="section-head">
+            <FileText />
+            <div>
+              <p>PLAIN-LANGUAGE POLICIES</p>
+              <h2>Know your rights and our duties.</h2>
+            </div>
+          </div>
+          {[
+            [
+              "privacy",
+              "Privacy notice",
+              "What we collect, why, retention, sharing and your rights.",
+            ],
+            [
+              "terms",
+              "Terms of use",
+              "Account conduct, platform limits, employer rules and dispute process.",
+            ],
+            [
+              "accessibility",
+              "Accessibility statement",
+              "WCAG direction, accommodations and how to report a barrier.",
+            ],
+            [
+              "retention",
+              "Data retention schedule",
+              "How long each record category is kept and why.",
+            ],
+          ].map(([slug, x, y]) => (
+            <Link className="policy-link" href={`/trust/${slug}`} key={x}>
+              <p>
+                <b>{x}</b>
+                <span>{y}</span>
+              </p>
+              <ArrowRight />
+            </Link>
+          ))}
+        </article>
+        <article id="ai">
+          <div className="section-head">
+            <Bot />
+            <div>
+              <p>AI TRANSPARENCY</p>
+              <h2>What AI does—and never decides.</h2>
+            </div>
+          </div>
+          <div className="does">
+            <div>
+              <b>
+                <CheckCircle2 />
+                AI may
+              </b>
+              <ul>
+                <li>Explain diagnostic and readiness signals</li>
+                <li>Recommend approved learning resources</li>
+                <li>Structure interview practice feedback</li>
+                <li>Explain role-skill overlap and missing evidence</li>
+              </ul>
+            </div>
+            <div>
+              <b>
+                <LockKeyhole />
+                AI may not
+              </b>
+              <ul>
+                <li>Reject a learner from a real opportunity</li>
+                <li>Invent credentials or work experience</li>
+                <li>Use protected or irrelevant traits</li>
+                <li>Promise employment, wages or selection</li>
+              </ul>
+            </div>
+          </div>
+          <a href="#model">
+            Open the public model card
+            <ExternalLink />
+          </a>
+        </article>
+      </section>
+      <section className="impact" id="impact">
+        <div className="section-head">
+          <BarChart3 />
+          <div>
+            <p>PRIVACY-SAFE IMPACT</p>
+            <h2>How the pilot is progressing.</h2>
+          </div>
+        </div>
+        <div className="impact-cards">
+          <div>
+            <b>3,665</b>
+            <span>Activated learners</span>
+            <small>Verified account + onboarding</small>
+          </div>
+          <div>
+            <b>68%</b>
+            <span>Role readiness</span>
+            <small>Role-specific, v0.4.2</small>
+          </div>
+          <div>
+            <b>511</b>
+            <span>Verified placements</span>
+            <small>Learner-confirmed joining</small>
+          </div>
+          <div>
+            <b>86%</b>
+            <span>90-day retention</span>
+            <small>Eligible follow-ups only</small>
+          </div>
+        </div>
+        <div className="methodology">
+          <ShieldCheck />
+          <p>
+            <b>Methodology matters</b>
+            <span>
+              Metrics suppress groups under 10, distinguish missing follow-up
+              from negative outcomes, and publish model/version changes. No
+              individual rankings appear here.
+            </span>
+          </p>
+          <button>
+            Read outcome methodology
+            <ArrowRight />
+          </button>
+        </div>
+      </section>
+      <section className="partner-help">
+        <article>
+          <div className="section-head">
+            <Building2 />
+            <div>
+              <p>VERIFIED NETWORK</p>
+              <h2>Pilot partners</h2>
+            </div>
+          </div>
+          {partners.map((x) => (
+            <div className="trust-partner" key={x.name}>
+              <i>
+                <Building2 />
+              </i>
+              <p>
+                <b>{x.name}</b>
+                <span>
+                  {x.kind} · {x.check}
+                </span>
+              </p>
+              <ShieldCheck />
+            </div>
+          ))}
+          <button>
+            View verification standard
+            <ArrowRight />
+          </button>
+        </article>
+        <article id="help">
+          <div className="section-head">
+            <LifeBuoy />
+            <div>
+              <p>HELP CENTER</p>
+              <h2>Clear answers, human support.</h2>
+            </div>
+          </div>
+          {[
+            [
+              "How is my JobReady Index calculated?",
+              "It combines role-specific, dated evidence and shows each dimension, source, confidence and improvement action.",
+            ],
+            [
+              "Can an employer see my contact details?",
+              "Not until you accept a purpose-bound access request from a verified employer.",
+            ],
+            [
+              "How do I challenge incorrect feedback?",
+              "Open a correction or appeal from your account, or use the public concern form below.",
+            ],
+          ].map(([q, a], i) => (
+            <div className="faq" key={q}>
+              <button onClick={() => setFaq(faq === i ? null : i)}>
+                <b>{q}</b>
+                <ChevronDown />
+              </button>
+              {faq === i && <p>{a}</p>}
+            </div>
+          ))}
+          <a href="mailto:support@karmasetu.ai">
+            <Mail />
+            Contact human support
+          </a>
+        </article>
+      </section>
+      <section className="report" id="report">
+        <div>
+          <p>GRIEVANCE & SAFETY REPORTING</p>
+          <h2>{c.report}</h2>
+          <span>
+            Report incorrect data, unfair treatment, unsafe content,
+            accessibility barriers or suspected misuse. You can report without
+            an account.
+          </span>
+          <div>
+            <ShieldCheck />
+            <p>
+              <b>No retaliation</b>Your report will not lower scores, hide
+              opportunities or affect institute access.
+            </p>
+          </div>
+        </div>
+        {sent ? (
+          <div className="report-sent">
+            <CheckCircle2 />
+            <h3>Report received.</h3>
+            <p>
+              Reference: KS-TRUST-2026-0821. Save this number for follow-up.
+            </p>
+            <button onClick={() => setSent(false)}>
+              Submit another report
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={submit}>
+            <label>
+              Concern type
+              <select name="type" required>
+                <option value="incorrect_data">Incorrect data</option>
+                <option value="fairness">Fairness or discrimination</option>
+                <option value="privacy">Privacy or consent</option>
+                <option value="accessibility">Accessibility barrier</option>
+                <option value="unsafe_content">Unsafe content</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label>
+              Email for follow-up (optional)
+              <input name="email" type="email" placeholder="you@example.com" />
+            </label>
+            <label>
+              What happened?
+              <textarea
+                name="summary"
+                required
+                minLength={20}
+                placeholder="Do not include passwords or highly sensitive documents."
+              />
+            </label>
+            <label className="contact">
+              <input name="contact" type="checkbox" />
+              KarmaSetu may contact me about this report.
+            </label>
+            <button>
+              <Send />
+              Submit securely
+            </button>
+          </form>
+        )}
+      </section>
+      <footer>
+        <div className="trust-brand">
+          <span>क</span>
+          <div>
+            KarmaSetu <b>AI</b>
+            <small>कौशल से करियर तक</small>
+          </div>
+        </div>
+        <p>Evidence-led employability with human accountability.</p>
+        <div>
+          <a href="#privacy">Privacy</a>
+          <a href="#ai">AI transparency</a>
+          <a href="#report">Report concern</a>
+          <a href="mailto:hello@karmasetu.ai">Contact</a>
+        </div>
+      </footer>
+    </main>
+  );
+}

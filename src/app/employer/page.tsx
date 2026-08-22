@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -20,7 +19,6 @@ import {
   LockKeyhole,
   MapPin,
   Plus,
-  Search,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -29,6 +27,7 @@ import {
 } from "lucide-react";
 import "./employer.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
+import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
 
 const candidates = [
   {
@@ -84,7 +83,7 @@ const jobs = [
 ];
 
 export default function Employer() {
-  const [lang, setLang] = useState<"en" | "hi">("en");
+  const {lang,toggleLanguage}=useWorkspaceLanguage();
   const copy =
     lang === "en"
       ? {
@@ -111,28 +110,28 @@ export default function Employer() {
             <small>EMPLOYER WORKSPACE</small>
           </div>
         </Link>
-        <div className="company">
+        <Link href="/workspace/settings" className="company" aria-label="Open employer workspace settings">
           <Building2 />
           <p>
             <b>Shakti Auto Components</b>
             <small>Verified employer</small>
           </p>
           <ChevronDown />
-        </div>
+        </Link>
         <nav>
           {[
-            [LayoutDashboard, "Overview"],
-            [BriefcaseBusiness, "Jobs"],
-            [Users, "Talent"],
-            [CalendarClock, "Interviews"],
-            [Handshake, "Offers"],
-            [BarChart3, "Outcomes"],
-          ].map(([Icon, label], i) => {
+            [LayoutDashboard, "Overview","employer-overview"],
+            [BriefcaseBusiness, "Jobs","employer-jobs"],
+            [Users, "Talent","employer-talent"],
+            [CalendarClock, "Interviews","employer-pipeline"],
+            [Handshake, "Offers","employer-pipeline"],
+            [BarChart3, "Outcomes","employer-pipeline"],
+          ].map(([Icon, label,target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
               <a
                 className={i === 0 ? "active" : ""}
-                href={`#${String(label)}`}
+                href={`#${String(target)}`}
                 key={String(label)}
               >
                 <I />
@@ -143,39 +142,31 @@ export default function Employer() {
           })}
         </nav>
         <div className="emp-bottom">
-          <a href="#settings">
+          <Link href="/workspace/settings">
             <Settings />
             Workspace settings
-          </a>
-          <div>
+          </Link>
+          <WorkspaceSignOut/>
+          <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
               <b>Rohit Malhotra</b>
               <small>Hiring Manager</small>
             </p>
-          </div>
+          </Link>
         </div>
       </aside>
       <section className="emp-main">
         <header>
-          <label>
-            <Search />
-            <input
-              aria-label="Search"
-              placeholder="Search talent, jobs or interviews…"
-            />
-          </label>
-          <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+          <WorkspaceSearch placeholder="Search talent, jobs or interviews…" targets={{"talent|candidate|skill":"employer-talent","job|role|vacancy":"employer-jobs","interview|offer|outcome|pipeline":"employer-pipeline"}}/>
+          <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <button className="bell">
-            <Bell />
-            <i />
-          </button>
-          <CircleUserRound />
+          <WorkspaceHeaderLink href="/workspace/notifications" label="Employer notifications" className="bell"><Bell/><i/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink href="/workspace/settings" label="Employer account settings"><CircleUserRound/></WorkspaceHeaderLink>
         </header>
-        <div className="emp-content">
+        <div className="emp-content" id="employer-overview">
           <div className="emp-welcome">
             <div>
               <p>
@@ -207,26 +198,26 @@ export default function Employer() {
           </div>
           <div className="emp-kpis">
             {[
-              [BriefcaseBusiness, "Open roles", "2", "26 vacancies"],
-              [Users, "Qualified matches", "95", "12 new this week"],
-              [CalendarClock, "Interviews", "14", "5 awaiting feedback"],
-              [Handshake, "Offers accepted", "8", "80% acceptance"],
-            ].map(([Icon, label, value, note]) => {
+              [BriefcaseBusiness, "Open roles", "2", "26 vacancies", "employer-jobs"],
+              [Users, "Qualified matches", "95", "12 new this week", "employer-talent"],
+              [CalendarClock, "Interviews", "14", "5 awaiting feedback", "employer-pipeline"],
+              [Handshake, "Offers accepted", "8", "80% acceptance", "employer-pipeline"],
+            ].map(([Icon, label, value, note, target]) => {
               const I = Icon as typeof BriefcaseBusiness;
               return (
-                <article key={String(label)}>
+                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
                   <div>
                     <I />
                     <span>{String(label)}</span>
                   </div>
                   <b>{String(value)}</b>
                   <small>{String(note)}</small>
-                </article>
+                </article></a>
               );
             })}
           </div>
           <div className="emp-grid">
-            <article className="talent">
+            <article className="talent" id="employer-talent">
               <div className="card-head">
                 <div>
                   <p>EXPLAINABLE MATCHING</p>
@@ -287,13 +278,13 @@ export default function Employer() {
                 </span>
               </div>
             </article>
-            <article className="roles">
+            <article className="roles" id="employer-jobs">
               <div className="card-head">
                 <div>
                   <p>ROLE HEALTH</p>
                   <h2>{copy.jobs}</h2>
                 </div>
-                <a href="#jobs">
+                <a href="#employer-jobs">
                   Manage all
                   <ArrowRight />
                 </a>
@@ -325,7 +316,7 @@ export default function Employer() {
                 Create another role
               </button>
             </article>
-            <article className="pipeline-card">
+            <article className="pipeline-card" id="employer-pipeline">
               <div className="card-head">
                 <div>
                   <p>FAIR HIRING OPERATIONS</p>

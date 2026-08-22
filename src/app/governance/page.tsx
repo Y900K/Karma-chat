@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -21,7 +20,6 @@ import {
   LockKeyhole,
   MapPinned,
   Scale,
-  Search,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -30,6 +28,7 @@ import {
 } from "lucide-react";
 import "./governance.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
+import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
 
 const districts = [
   { name: "Dehradun", learners: 1240, ready: 72, placed: 184, retained: 88 },
@@ -71,7 +70,7 @@ const reviews = [
 ];
 
 export default function Governance() {
-  const [lang, setLang] = useState<"en" | "hi">("en");
+  const {lang,toggleLanguage}=useWorkspaceLanguage();
   const c =
     lang === "en"
       ? {
@@ -98,30 +97,30 @@ export default function Governance() {
             <small>PROGRAM GOVERNANCE</small>
           </div>
         </Link>
-        <div className="program">
+        <Link href="/workspace/settings" className="program" aria-label="Open government program settings">
           <MapPinned />
           <p>
             <b>Uttarakhand Skills Mission</b>
             <small>State pilot · Authorized</small>
           </p>
           <ChevronDown />
-        </div>
+        </Link>
         <nav>
           {[
-            [LayoutDashboard, "Overview"],
-            [MapPinned, "Districts"],
-            [Building2, "Institutes"],
-            [TrendingUp, "Demand signals"],
-            [Scale, "Fairness"],
-            [ShieldCheck, "AI governance"],
-            [FileWarning, "Grievances"],
-            [Database, "Data exports"],
-          ].map(([Icon, label], i) => {
+            [LayoutDashboard, "Overview","government-overview"],
+            [MapPinned, "Districts","government-districts"],
+            [Building2, "Institutes","government-districts"],
+            [TrendingUp, "Demand signals","government-demand"],
+            [Scale, "Fairness","government-fairness"],
+            [ShieldCheck, "AI governance","government-fairness"],
+            [FileWarning, "Grievances","government-reviews"],
+            [Database, "Data exports","government-exports"],
+          ].map(([Icon, label,target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
               <a
                 className={i === 0 ? "active" : ""}
-                href={`#${String(label)}`}
+                href={`#${String(target)}`}
                 key={String(label)}
               >
                 <I />
@@ -132,39 +131,31 @@ export default function Governance() {
           })}
         </nav>
         <div className="gov-bottom">
-          <a href="#settings">
+          <Link href="/workspace/settings">
             <Settings />
             Program settings
-          </a>
-          <div>
+          </Link>
+          <WorkspaceSignOut/>
+          <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
               <b>Priya Nair</b>
               <small>Program Administrator</small>
             </p>
-          </div>
+          </Link>
         </div>
       </aside>
       <section className="gov-main">
         <header>
-          <label>
-            <Search />
-            <input
-              aria-label="Search"
-              placeholder="Search district, institute or metric…"
-            />
-          </label>
-          <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+          <WorkspaceSearch placeholder="Search district, institute or metric…" targets={{"district|institute|placement":"government-districts","demand|skill|employer":"government-demand","fairness|model|ai":"government-fairness","grievance|review|case":"government-reviews","export|data|audit":"government-exports"}}/>
+          <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <button className="alerts">
-            <Bell />
-            <i />
-          </button>
-          <CircleUserRound />
+          <WorkspaceHeaderLink href="/workspace/notifications" label="Government notifications" className="alerts"><Bell/><i/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink href="/workspace/settings" label="Government account settings"><CircleUserRound/></WorkspaceHeaderLink>
         </header>
-        <div className="gov-content">
+        <div className="gov-content" id="government-overview">
           <div className="gov-welcome">
             <div>
               <p>
@@ -203,37 +194,38 @@ export default function Governance() {
           </div>
           <div className="gov-kpis">
             {[
-              [Users, "Activated learners", "3,665", "+11% this quarter"],
-              [Gauge, "Role readiness", "68%", "+7 points"],
+              [Users, "Activated learners", "3,665", "+11% this quarter", "government-districts"],
+              [Gauge, "Role readiness", "68%", "+7 points", "government-fairness"],
               [
                 CheckCircle2,
                 "Verified placements",
                 "511",
                 "86% retained at 90d",
+                "government-districts",
               ],
-              [Activity, "Platform health", "99.96%", "2 open incidents"],
-            ].map(([Icon, label, value, note]) => {
+              [Activity, "Platform health", "99.96%", "2 open incidents", "government-reviews"],
+            ].map(([Icon, label, value, note, target]) => {
               const I = Icon as typeof Users;
               return (
-                <article key={String(label)}>
+                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
                   <div>
                     <I />
                     <span>{String(label)}</span>
                   </div>
                   <b>{String(value)}</b>
                   <small>{String(note)}</small>
-                </article>
+                </article></a>
               );
             })}
           </div>
           <div className="gov-grid">
-            <article className="districts">
+            <article className="districts" id="government-districts">
               <div className="ghead">
                 <div>
                   <p>PROGRAM DELIVERY</p>
                   <h2>{c.district}</h2>
                 </div>
-                <a href="#districts">
+                <a href="#government-districts">
                   View all 13
                   <ArrowRight />
                 </a>
@@ -269,7 +261,7 @@ export default function Governance() {
                 </span>
               </div>
             </article>
-            <article className="demand">
+            <article className="demand" id="government-demand">
               <div className="ghead">
                 <div>
                   <p>EMPLOYER SIGNALS</p>
@@ -304,7 +296,7 @@ export default function Governance() {
                 </p>
               </div>
             </article>
-            <article className="fairness">
+            <article className="fairness" id="government-fairness">
               <div className="ghead">
                 <div>
                   <p>RESPONSIBLE AI</p>
@@ -343,13 +335,13 @@ export default function Governance() {
                 <ArrowRight />
               </button>
             </article>
-            <article className="reviews">
+            <article className="reviews" id="government-reviews">
               <div className="ghead">
                 <div>
                   <p>HUMAN OVERSIGHT</p>
                   <h2>{c.queue}</h2>
                 </div>
-                <a href="#queue">
+                <a href="#government-reviews">
                   Open queue
                   <ArrowRight />
                 </a>
@@ -372,7 +364,7 @@ export default function Governance() {
                 <span>No learner-impacting grievance is past SLA.</span>
               </div>
             </article>
-            <article className="lineage">
+            <article className="lineage" id="government-exports">
               <div className="ghead">
                 <div>
                   <p>DATA RESPONSIBILITY</p>

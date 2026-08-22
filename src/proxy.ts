@@ -14,6 +14,7 @@ const protectedRoutes = [
   "/schedule",
   "/settings",
   "/notifications",
+  "/workspace",
   "/invite",
   "/institute",
   "/employer",

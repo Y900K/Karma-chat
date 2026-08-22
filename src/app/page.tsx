@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -9,6 +10,8 @@ import {
   Building2,
   CheckCircle2,
   ChevronDown,
+  Eye,
+  EyeOff,
   GraduationCap,
   Languages,
   LockKeyhole,
@@ -74,6 +77,7 @@ const roles = [
       hi: "जानें कि आप कहाँ खड़े हैं। सही skills बनाएँ और interview के लिए तैयार हों।",
     },
     cta: { en: "Start my journey", hi: "अपनी journey शुरू करें" },
+    access: "public",
   },
   {
     icon: Building2,
@@ -83,6 +87,7 @@ const roles = [
       hi: "Skill gaps जल्दी पहचानें, outcomes सुधारें और placement data को actionable बनाएँ।",
     },
     cta: { en: "Transform outcomes", hi: "Outcomes बेहतर बनाएँ" },
+    access: "invitation",
   },
   {
     icon: Users,
@@ -92,6 +97,7 @@ const roles = [
       hi: "Unfiltered résumés की भीड़ नहीं—verified evidence से सही talent चुनें।",
     },
     cta: { en: "Find verified talent", hi: "Verified talent खोजें" },
+    access: "invitation",
   },
 ];
 
@@ -226,7 +232,8 @@ function AuthModal({
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [message, setMessage] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [showPassword, setShowPassword] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -327,14 +334,20 @@ function AuthModal({
               </label>
               <label>
                 Password
-                <input
-                  type="password"
-                  minLength={10}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 10 characters"
-                />
+                <span className="modal-password">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    minLength={10}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minimum 10 characters"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </button>
+                </span>
               </label>
               <button className="primary wide" disabled={busy}>
                 {busy
@@ -462,7 +475,7 @@ export default function Home() {
           <div className="trust">
             <div>
               <b>200+</b>
-              <span>Pilot learners</span>
+              <span>Current pilot learners</span>
             </div>
             <div>
               <b>15</b>
@@ -470,7 +483,7 @@ export default function Home() {
             </div>
             <div>
               <b>10</b>
-              <span>MSME partners</span>
+              <span>Target MSME partners</span>
             </div>
           </div>
         </div>
@@ -640,9 +653,15 @@ export default function Home() {
               </div>
               <h3>{tx(role.title, lang)}</h3>
               <p>{tx(role.body, lang)}</p>
-              <button onClick={() => setAuth(true)}>
-                {tx(role.cta, lang)} <ArrowRight size={17} />
-              </button>
+              {role.access === "public" ? (
+                <button onClick={() => setAuth(true)}>
+                  {tx(role.cta, lang)} <ArrowRight size={17} />
+                </button>
+              ) : (
+                <Link className="role-action" href="/invite">
+                  {tx(role.cta, lang)} <ArrowRight size={17} />
+                </Link>
+              )}
             </motion.article>
           ))}
         </div>
@@ -680,19 +699,14 @@ export default function Home() {
             <span />
             <span />
           </div>
-          <div className="video-stage">
-            <button aria-label="Play sample lesson">
-              <Play size={28} fill="currentColor" />
-            </button>
-            <div>
-              <small>FOUNDATION · 08:42</small>
-              <b>Reading an engineering drawing</b>
-              <span>Lesson placeholder · Add your YouTube ID</span>
-            </div>
-          </div>
-          <div className="video-progress">
-            <span />
-          </div>
+          <iframe
+            className="video-stage"
+            src="https://www.youtube-nocookie.com/embed/m5x96lXaUKk"
+            title="NPTEL: Basics of engineering drawing"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
         </div>
       </section>
       <section className="cta-section">
@@ -736,10 +750,10 @@ export default function Home() {
         <div>
           <a href="#journey">How it works</a>
           <a href="#ecosystem">Ecosystem</a>
-          <a href="/trust">Trust center</a>
-          <a href="mailto:hello@karmasetu.ai">Contact</a>
+          <Link href="/trust">Trust center</Link>
+          <Link href="/trust#report">Contact</Link>
         </div>
-        <small>© 2026 KarmaSetu AI · Responsible AI · Privacy by design</small>
+        <small>© 2026 KarmaSetu AI · <Link href="/trust#ai">Responsible AI</Link> · <Link href="/trust#privacy">Privacy by design</Link></small>
       </footer>
       <AuthModal open={auth} close={() => setAuth(false)} lang={lang} />
     </main>

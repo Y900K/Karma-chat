@@ -89,6 +89,46 @@ test("sign out cannot be triggered by Next link prefetch", async () => {
   assert.match(settings, /action="\/auth\/signout" method="post"/);
 });
 
+test("every non-learner workspace exposes real shared controls and visible sections", async () => {
+  const utility = await readFile(join(root, "src/components/workspace-utilities.tsx"), "utf8");
+  const pilotCss = await readFile(join(root, "src/app/pilot.css"), "utf8");
+  assert.match(utility, /action="\/auth\/signout" method="post"/);
+  assert.match(utility, /\/api\/preferences/);
+  assert.doesNotMatch(pilotCss, /display:\s*none\s*!important/);
+  for (const route of ["institute", "employer", "governance", "admin"]) {
+    const page = await readFile(join(root, `src/app/${route}/page.tsx`), "utf8");
+    assert.match(page, /WorkspaceSearch/);
+    assert.match(page, /WorkspaceSignOut/);
+    assert.match(page, /href="\/workspace\/settings"/);
+    assert.match(page, /href="\/workspace\/notifications"/);
+    assert.doesNotMatch(page, /href="#settings"/);
+  }
+});
+
+test("shared workspace routes and preferences are authenticated", async () => {
+  const proxy = await readFile(join(root, "src/proxy.ts"), "utf8");
+  const preferences = await readFile(join(root, "src/app/api/preferences/route.ts"), "utf8");
+  assert.ok(proxy.includes('"/workspace"'));
+  assert.match(preferences, /requireViewer\(\)/);
+  assert.match(preferences, /preferred_language/);
+});
+
+test("partner acquisition stays invitation-only while learner signup stays public", async () => {
+  const home = await readFile(join(root, "src/app/page.tsx"), "utf8");
+  assert.match(home, /access:\s*"invitation"/);
+  assert.match(home, /href="\/invite"/);
+  assert.doesNotMatch(home, /name="persona"/);
+});
+
+test("public trust promises link to readable policy pages", async () => {
+  const trust = await readFile(join(root, "src/app/trust/page.tsx"), "utf8");
+  const policy = await readFile(join(root, "src/app/trust/[policy]/page.tsx"), "utf8");
+  for (const slug of ["privacy", "terms", "accessibility", "retention"]) {
+    assert.ok(trust.includes(`"${slug}"`), `${slug} policy link missing`);
+    assert.ok(policy.includes(`${slug}:`), `${slug} policy content missing`);
+  }
+});
+
 test("protected navigation avoids duplicate remote user lookups", async () => {
   const proxy = await readFile(join(root, "src/proxy.ts"), "utf8");
   const dal = await readFile(join(root, "src/lib/auth/dal.ts"), "utf8");

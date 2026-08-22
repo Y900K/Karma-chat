@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -19,7 +18,6 @@ import {
   Library,
   Link2,
   Plus,
-  Search,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -27,6 +25,7 @@ import {
 } from "lucide-react";
 import "./admin.css";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
+import {useWorkspaceLanguage,WorkspaceHeaderLink,WorkspaceSearch,WorkspaceSignOut} from "@/components/workspace-utilities";
 
 const queue = [
   {
@@ -72,7 +71,7 @@ const partners = [
   },
 ];
 export default function Admin() {
-  const [lang, setLang] = useState<"en" | "hi">("en");
+  const {lang,toggleLanguage}=useWorkspaceLanguage();
   const c =
     lang === "en"
       ? {
@@ -99,21 +98,21 @@ export default function Admin() {
         </Link>
         <nav>
           {[
-            [LayoutDashboard, "Command center"],
-            [Library, "Content registry"],
-            [FileQuestion, "Question bank"],
-            [Languages, "Translations"],
-            [Building2, "Partner verification"],
-            [Bot, "AI prompts & evals"],
-            [Flag, "Moderation"],
-            [ToggleRight, "Feature flags"],
-            [Activity, "System health"],
-          ].map(([Icon, label], i) => {
+            [LayoutDashboard, "Command center","admin-overview"],
+            [Library, "Content registry","admin-content"],
+            [FileQuestion, "Question bank","admin-content"],
+            [Languages, "Translations","admin-content"],
+            [Building2, "Partner verification","admin-partners"],
+            [Bot, "AI prompts & evals","admin-ai"],
+            [Flag, "Moderation","admin-content"],
+            [ToggleRight, "Feature flags","admin-flags"],
+            [Activity, "System health","admin-health"],
+          ].map(([Icon, label,target], i) => {
             const I = Icon as typeof LayoutDashboard;
             return (
               <a
                 className={i === 0 ? "active" : ""}
-                href={`#${String(label)}`}
+                href={`#${String(target)}`}
                 key={String(label)}
               >
                 <I />
@@ -124,39 +123,31 @@ export default function Admin() {
           })}
         </nav>
         <div className="adm-bottom">
-          <a href="#settings">
+          <Link href="/workspace/settings">
             <Settings />
             Platform settings
-          </a>
-          <div>
+          </Link>
+          <WorkspaceSignOut/>
+          <Link href="/workspace/settings" className="workspace-profile">
             <CircleUserRound />
             <p>
               <b>Platform Operations</b>
               <small>Super administrator</small>
             </p>
-          </div>
+          </Link>
         </div>
       </aside>
       <section className="adm-main">
         <header>
-          <label>
-            <Search />
-            <input
-              aria-label="Search"
-              placeholder="Search content, partner or incident…"
-            />
-          </label>
-          <button onClick={() => setLang(lang === "en" ? "hi" : "en")}>
+          <WorkspaceSearch placeholder="Search content, partner or incident…" targets={{"content|question|translation|moderation":"admin-content","partner|verification":"admin-partners","prompt|model|ai|eval":"admin-ai","flag|rollout":"admin-flags","health|incident|system":"admin-health"}}/>
+          <button onClick={toggleLanguage}>
             <Languages />
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <button className="adm-bell">
-            <Bell />
-            <i />
-          </button>
-          <CircleUserRound />
+          <WorkspaceHeaderLink href="/workspace/notifications" label="Admin notifications" className="adm-bell"><Bell/><i/></WorkspaceHeaderLink>
+          <WorkspaceHeaderLink href="/workspace/settings" label="Admin account settings"><CircleUserRound/></WorkspaceHeaderLink>
         </header>
-        <div className="adm-content">
+        <div className="adm-content" id="admin-overview">
           <div className="adm-welcome">
             <div>
               <p>
@@ -188,32 +179,32 @@ export default function Admin() {
           </div>
           <div className="adm-kpis">
             {[
-              [Library, "Published resources", "186", "12 need review soon"],
-              [Languages, "Translation coverage", "91%", "English + Hinglish"],
-              [Building2, "Verified partners", "24", "3 awaiting checks"],
-              [Activity, "Services healthy", "8/8", "No active outage"],
-            ].map(([Icon, label, value, note]) => {
+              [Library, "Published resources", "186", "12 need review soon", "admin-content"],
+              [Languages, "Translation coverage", "91%", "English + Hinglish", "admin-content"],
+              [Building2, "Verified partners", "24", "3 awaiting checks", "admin-partners"],
+              [Activity, "Services healthy", "8/8", "No active outage", "admin-health"],
+            ].map(([Icon, label, value, note, target]) => {
               const I = Icon as typeof Library;
               return (
-                <article key={String(label)}>
+                <a className="workspace-kpi" href={`#${String(target)}`} key={String(label)}><article>
                   <div>
                     <I />
                     <span>{String(label)}</span>
                   </div>
                   <b>{String(value)}</b>
                   <small>{String(note)}</small>
-                </article>
+                </article></a>
               );
             })}
           </div>
           <div className="adm-grid">
-            <article className="content-queue">
+            <article className="content-queue" id="admin-content">
               <div className="ahead">
                 <div>
                   <p>EDITORIAL WORKFLOW</p>
                   <h2>{c.queue}</h2>
                 </div>
-                <a href="#content">
+                <a href="#admin-content">
                   View all 17
                   <ArrowRight />
                 </a>
@@ -296,13 +287,13 @@ export default function Admin() {
                 Run permission and link scan
               </button>
             </article>
-            <article className="partners">
+            <article className="partners" id="admin-partners">
               <div className="ahead">
                 <div>
                   <p>TRUST & SAFETY</p>
                   <h2>{c.partners}</h2>
                 </div>
-                <a href="#partners">
+                <a href="#admin-partners">
                   Open verification desk
                   <ArrowRight />
                 </a>
@@ -326,7 +317,7 @@ export default function Admin() {
                 </div>
               ))}
             </article>
-            <article className="aiops">
+            <article className="aiops" id="admin-ai">
               <div className="ahead">
                 <div>
                   <p>AI RELEASE CONTROL</p>
@@ -367,13 +358,13 @@ export default function Admin() {
                 <button>Review</button>
               </div>
             </article>
-            <article className="flags">
+            <article className="flags" id="admin-flags">
               <div className="ahead">
                 <div>
                   <p>CONTROLLED ROLLOUTS</p>
                   <h2>Feature flags</h2>
                 </div>
-                <a href="#flags">
+                <a href="#admin-flags">
                   Manage flags
                   <ArrowRight />
                 </a>
@@ -396,7 +387,7 @@ export default function Admin() {
                 </div>
               ))}
             </article>
-            <article className="health">
+            <article className="health" id="admin-health">
               <div className="ahead">
                 <div>
                   <p>PLATFORM STATUS</p>
