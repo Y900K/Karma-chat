@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import * as THREE from "three";
 import { createClient } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import {signInForNavigation} from "@/app/auth/actions";
 
 type Lang = "en" | "hi";
 type Copy = { en: string; hi: string };
@@ -222,7 +222,6 @@ function AuthModal({
   close: () => void;
   lang: Lang;
 }) {
-  const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login"),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -244,10 +243,14 @@ function AuthModal({
       return;
     }
     const supabase = createClient(url, key);
-    const result =
-      mode === "login"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
+    if(mode==="login"){
+      const login=await signInForNavigation({email,password});
+      setMessage(login.ok?"Welcome back.":login.error);
+      setBusy(false);
+      if(login.ok)window.location.assign(login.destination);
+      return;
+    }
+    const result = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -257,15 +260,9 @@ function AuthModal({
     setMessage(
       result.error
         ? result.error.message
-        : mode === "login"
-          ? "Welcome back."
-          : "Check your email to verify your account.",
+        : "Check your email to verify your account.",
     );
     setBusy(false);
-    if (!result.error && mode === "login") {
-      router.push("/dashboard");
-      router.refresh();
-    }
   };
   return (
     <AnimatePresence>

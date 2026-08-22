@@ -15,16 +15,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {signInForNavigation} from "@/app/auth/actions";
 import "./auth.css";
 
 type Mode = "login" | "signup" | "forgot";
-const destinations = {
-  learner: "/dashboard",
-  institute: "/institute",
-  employer: "/employer",
-  government: "/governance",
-  admin: "/admin",
-};
 export default function AuthPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login"),
@@ -81,21 +75,9 @@ export default function AuthPage() {
         router.refresh();
         return;
       }
-      const { data, error: x } = await sb.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (x) throw x;
-      const { data: account, error: accountError } = await sb
-        .from("user_accounts")
-        .select("persona,status")
-        .eq("user_id", data.user.id)
-        .single();
-      if (accountError) throw new Error("Your account role could not be verified.");
-      if (account.status !== "active") throw new Error("This account is not active.");
-      const persona = account.persona as keyof typeof destinations;
-      router.push(destinations[persona] || "/dashboard");
-      router.refresh();
+      const result=await signInForNavigation({email,password});
+      if(!result.ok)throw new Error(result.error);
+      window.location.assign(result.destination);
     } catch (x) {
       setError(
         x instanceof Error

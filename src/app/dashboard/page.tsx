@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   ArrowRight,
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
 import "./dashboard.css";
+import "./dashboard-fixes.css";
 
 type Lang = "en" | "hi";
 const content = {
@@ -107,11 +109,30 @@ const dimensions = [
 ];
 
 export default function Dashboard() {
+  const router = useRouter();
   const [lang, setLang] = useState<Lang>("en");
   const [query, setQuery] = useState("");
+  const [headerSearch, setHeaderSearch] = useState("");
+  const [identity, setIdentity] = useState({ displayName: "Learner", trade: "Current pathway", semester: null as number | null });
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
   const c = content[lang];
+  const searchNavigate = () => {
+    const value = headerSearch.trim().toLowerCase();
+    const destination = /lesson|learn|course|path/.test(value) ? "/learn" : /evidence|proof|project/.test(value) ? "/evidence" : /interview|practice/.test(value) ? "/interview" : /job|opportun|application/.test(value) ? "/opportunities" : "/roles";
+    router.push(destination);
+  };
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/dashboard?scope=learner", { cache: "no-store", signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => {
+        if (payload?.data?.identity) setIdentity({ displayName: String(payload.data.identity.displayName || "Learner"), trade: String(payload.data.identity.trade || "Current pathway"), semester: typeof payload.data.identity.semester === "number" ? payload.data.identity.semester : null });
+        if (typeof payload?.data?.metrics?.unreadNotifications === "number") setUnreadNotifications(payload.data.metrics.unreadNotifications);
+      }).catch(() => undefined);
+    return () => controller.abort();
+  }, []);
   const askCoach = async () => {
     if (!query.trim()) return;
     setBusy(true);
@@ -155,7 +176,7 @@ export default function Dashboard() {
             <Link
               href={
                 i === 1
-                  ? "/diagnostic"
+                  ? "/portfolio"
                   : i === 2
                     ? "/learn"
                     : i === 3
@@ -164,7 +185,7 @@ export default function Dashboard() {
                         ? "/interview"
                         : i === 5
                           ? "/opportunities"
-                          : `#${i}`
+                  : "/dashboard"
               }
               className={i === 0 ? "active" : ""}
               key={c.nav[i]}
@@ -185,8 +206,8 @@ export default function Dashboard() {
           <div className="profile-mini">
             <CircleUserRound />
             <span>
-              <b>Aarav Sharma</b>
-              <small>Electrical · Semester 4</small>
+              <b>{identity.displayName}</b>
+              <small>{identity.trade}{identity.semester ? ` · Semester ${identity.semester}` : ""}</small>
             </span>
           </div>
         </div>
@@ -194,21 +215,21 @@ export default function Dashboard() {
       <section className="dash-main">
         <header className="dash-top">
           <div className="mobile-brand">क</div>
-          <div className="dash-search">
+          <form className="dash-search" onSubmit={(event) => { event.preventDefault(); searchNavigate(); }}>
             <Search />
-            <input placeholder="Search skills, lessons, opportunities…" />
-          </div>
+            <input value={headerSearch} onChange={(event) => setHeaderSearch(event.target.value)} placeholder="Search skills, lessons, opportunities…" aria-label="Search roles and skills" />
+          </form>
           <button
             className="lang-switch"
             onClick={() => setLang(lang === "en" ? "hi" : "en")}
           >
             <Languages /> {lang === "en" ? "हिंदी" : "EN"}
           </button>
-          <button className="icon-btn" aria-label="Notifications">
+          <Link className="icon-btn" href="/notifications" aria-label={`Notifications${unreadNotifications ? ` (${unreadNotifications} unread)` : ""}`}>
             <Bell />
-            <span />
-          </button>
-          <CircleUserRound className="mobile-avatar" />
+            {unreadNotifications > 0 && <span />}
+          </Link>
+          <Link href="/settings" aria-label="Account settings"><CircleUserRound className="mobile-avatar" /></Link>
         </header>
         <div className="dash-content">
           <div className="welcome">
@@ -216,7 +237,7 @@ export default function Dashboard() {
               <p className="dash-eyebrow">
                 <Sparkles /> {c.active}
               </p>
-              <h1>{c.hello}</h1>
+              <h1>{lang === "en" ? `Good afternoon, ${identity.displayName}.` : `नमस्ते ${identity.displayName}।`}</h1>
               <p>{c.sub}</p>
             </div>
             <div className="week-stat">
@@ -250,10 +271,10 @@ export default function Dashboard() {
                   <p className="dash-label">{c.readiness}</p>
                   <h3>{c.match}</h3>
                 </div>
-                <button>
+                <Link href="/portfolio">
                   {c.explanation}
                   <ChevronRight />
-                </button>
+                </Link>
               </div>
               <div className="readiness-body">
                 <div className="score-ring">
@@ -306,9 +327,9 @@ export default function Dashboard() {
                       <small>{x[1]}</small>
                     </p>
                     {i === 2 && (
-                      <button>
+                      <Link href="/learn">
                         <Play /> Continue
-                      </button>
+                      </Link>
                     )}
                   </div>
                 ))}
@@ -320,7 +341,7 @@ export default function Dashboard() {
                   <p className="dash-label">{c.opportunities}</p>
                   <h3>Roles moving closer</h3>
                 </div>
-                <a href="#opportunities">View all</a>
+                <Link href="/opportunities">View all</Link>
               </div>
               {[
                 {

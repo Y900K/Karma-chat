@@ -68,6 +68,17 @@ test("auth callback rejects protocol-relative redirects", async () => {
   assert.match(callback, /!requestedNext\.startsWith\("\/\/"\)/);
 });
 
+test("password login establishes the SSR session before navigation", async () => {
+  const action = await readFile(join(root, "src/app/auth/actions.ts"), "utf8");
+  const authPage = await readFile(join(root, "src/app/auth/page.tsx"), "utf8");
+  const homePage = await readFile(join(root, "src/app/page.tsx"), "utf8");
+  assert.match(action, /await supabase\.auth\.signInWithPassword/);
+  assert.match(authPage, /signInForNavigation/);
+  assert.match(homePage, /signInForNavigation/);
+  assert.match(authPage, /window\.location\.assign/);
+  assert.doesNotMatch(authPage, /router\.push\(destinations/);
+});
+
 test("live dashboards expose role-scoped DTOs", async () => {
   const route = await readFile(
     join(root, "src/app/api/dashboard/route.ts"),
