@@ -102,7 +102,7 @@ export default function Employer() {
           funnel: "Hiring pipeline",
         };
   return (
-    <main className="emp-shell">
+    <main className="emp-shell pilot-live">
       <aside>
         <Link href="/" className="emp-brand">
           <span>क</span>

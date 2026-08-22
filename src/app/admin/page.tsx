@@ -88,7 +88,7 @@ export default function Admin() {
           partners: "Partner verification",
         };
   return (
-    <main className="adm-shell">
+    <main className="adm-shell pilot-live">
       <aside>
         <Link href="/" className="adm-brand">
           <span>क</span>

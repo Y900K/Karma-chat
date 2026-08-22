@@ -134,7 +134,7 @@ export default function Dashboard() {
     setBusy(false);
   };
   return (
-    <main className="dash-shell">
+    <main className="dash-shell pilot-live">
       <aside className="dash-sidebar">
         <Link className="dash-brand" href="/">
           <span>क</span>

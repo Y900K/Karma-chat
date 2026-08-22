@@ -88,3 +88,34 @@ test("opportunity applications use live matches instead of fictional job ids", a
   assert.doesNotMatch(opportunities, /apex-junior-electrical/);
   assert.doesNotMatch(opportunities, /shivam-maintenance-apprentice/);
 });
+
+test("every learner workflow has a page-level persona guard", async () => {
+  for (const route of ["onboarding","diagnostic","learn","evidence","interview","opportunities","portfolio","resume","schedule","settings","notifications"]) {
+    const layout = await readFile(join(root, `src/app/${route}/layout.tsx`), "utf8");
+    assert.match(layout, /learner-route-layout/, `${route} is missing the learner route guard`);
+  }
+});
+
+test("pilot identity migration blocks direct persona changes and validates invitations", async () => {
+  const sql = await readFile(join(root, "supabase/migrations/030_pilot_identity_and_invitations.sql"), "utf8");
+  assert.match(sql, /revoke update on table public\.user_accounts from anon, authenticated/i);
+  assert.match(sql, /values \(new\.id, 'learner'/i);
+  assert.match(sql, /lower\(email\) = v_email/i);
+  assert.match(sql, /verification_status <> 'verified'/i);
+  assert.match(sql, /drop policy if exists "learners upload own evidence files"/i);
+});
+
+test("learning media comes only from the approved registry", async () => {
+  const lesson = await readFile(join(root, "src/app/learn/page.tsx"), "utf8");
+  const api = await readFile(join(root, "src/app/api/learning/lesson/route.ts"), "utf8");
+  assert.doesNotMatch(lesson, /NEXT_PUBLIC_YOUTUBE_VIDEO_ID|NEXT_PUBLIC_GOOGLE_DRIVE_FILE_ID/);
+  assert.match(api, /external_resources/);
+  assert.match(api, /review_status.*approved/);
+  assert.match(api, /permission_status.*valid/);
+});
+
+test("unverified public profile snapshots are closed", async () => {
+  const profile = await readFile(join(root, "src/app/p/[token]/page.tsx"), "utf8");
+  assert.match(profile, /notFound\(\)/);
+  assert.doesNotMatch(profile, /Aarav Sharma/);
+});

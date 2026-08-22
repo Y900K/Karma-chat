@@ -125,7 +125,7 @@ export default function Institute() {
           privacy: "Consent-aware view",
         };
   return (
-    <main className="inst-shell">
+    <main className="inst-shell pilot-live">
       <aside>
         <Link href="/" className="inst-brand">
           <span>क</span>

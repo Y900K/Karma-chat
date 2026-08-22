@@ -89,7 +89,10 @@ async function createUser(persona) {
 async function seed() {
   await cleanup();
   const users = {};
-  for (const persona of personas) users[persona] = await createUser(persona);
+  for (const persona of personas) {
+    users[persona] = await createUser(persona);
+    must(await supabase.from('user_accounts').update({ persona }).eq('user_id', users[persona].id), `assign audited ${persona} persona`);
+  }
 
   const organizations = must(
     await supabase

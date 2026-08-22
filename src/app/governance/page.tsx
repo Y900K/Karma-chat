@@ -89,7 +89,7 @@ export default function Governance() {
           queue: "Governance review queue",
         };
   return (
-    <main className="gov-shell">
+    <main className="gov-shell pilot-live">
       <aside>
         <Link href="/" className="gov-brand">
           <span>क</span>

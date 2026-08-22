@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./pilot.css";
 import AnalyticsProvider from "@/components/analytics-provider";
 import WebVitals from "@/components/web-vitals";
 import { getSiteUrl } from "@/lib/site-url";

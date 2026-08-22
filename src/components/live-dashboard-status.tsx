@@ -93,9 +93,10 @@ export default function LiveDashboardStatus({ scope }: { scope: DashboardScope }
               </button>
             </div>
           </div>
-          {error ? <p className={styles.notice}>{error}. The sample preview below is not live operational data.</p> : null}
+          {error ? <p className={styles.notice}>{error}. Operational values are hidden until the live source recovers.</p> : null}
           {!error && metrics.length ? <div className={styles.metrics}>{metrics.map(([key, value]) => <div className={styles.metric} key={key}><b>{value ?? "—"}{key === "readiness" && value !== null ? "/100" : ""}</b><span>{labels[key] ?? key}</span></div>)}</div> : null}
-          <p className={styles.notice}>{payload?.refreshedAt ? `Refreshed ${new Date(payload.refreshedAt).toLocaleTimeString()}. ` : ""}The detailed cards below are a product preview until each module has sufficient live records.</p>
+          {!error && !metrics.length ? <p className={styles.empty}>No verified operational records are available for this workspace yet.</p> : null}
+          <p className={styles.notice}>{payload?.refreshedAt ? `Refreshed ${new Date(payload.refreshedAt).toLocaleTimeString()}. ` : ""}Only role-authorized live records are shown during the external pilot.</p>
         </>
       )}
     </section>

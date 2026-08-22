@@ -296,6 +296,9 @@ export default function AuthPage() {
               </p>
             )}
           </div>
+          <p className="auth-switch">
+            Have a verified partner invitation? <Link href="/invite">Accept invitation</Link>
+          </p>
           {!configured && (
             <div className="demo-links">
               <p>Explore local persona previews</p>

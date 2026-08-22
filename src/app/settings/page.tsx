@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -71,14 +71,20 @@ function Toggle({ on, set, label, detail, purpose }: ToggleProps) {
 }
 export default function SettingsPage() {
   const [lang, setLang] = useState<"en" | "hi">("en"),
-    [saved, setSaved] = useState(false),
+    [displayName, setDisplayName] = useState(""),
+    [accountEmail, setAccountEmail] = useState(""),
+    [loading, setLoading] = useState(true),
+    [saveError, setSaveError] = useState(""),
     [visibility, setVisibility] = useState("matched_employers"),
     [ai, setAi] = useState(true),
     [employer, setEmployer] = useState(true),
     [research, setResearch] = useState(false),
     [email, setEmail] = useState(true),
     [weekly, setWeekly] = useState(true),
-    [interviews, setInterviews] = useState(true);
+    [interviews, setInterviews] = useState(true),
+    [quietStart, setQuietStart] = useState("21:00"),
+    [quietEnd, setQuietEnd] = useState("08:00");
+  useEffect(() => { void (async () => { try { const response=await fetch("/api/account",{cache:"no-store"}); const body=await response.json(); if(!response.ok)throw new Error(body.error); setDisplayName(body.account?.displayName??""); setAccountEmail(body.account?.email??""); setLang(body.account?.preferredLanguage??"en"); setVisibility(body.profile?.profile_visibility??"private"); setAi(body.consents?.ai_personalization??false); setEmployer(body.consents?.employer_visibility??false); setResearch(body.consents?.research??false); setEmail(body.preferences?.email_enabled??true); setInterviews(body.preferences?.interview_reminders??true); setWeekly(body.preferences?.weekly_summary??true); setQuietStart(String(body.preferences?.quiet_hours_start??"21:00").slice(0,5)); setQuietEnd(String(body.preferences?.quiet_hours_end??"08:00").slice(0,5)); } catch(reason){setSaveError(reason instanceof Error?reason.message:"Account information could not be loaded");} finally{setLoading(false);} })(); },[]);
   const c =
     lang === "en"
       ? {
@@ -93,21 +99,6 @@ export default function SettingsPage() {
           privacy: "Privacy और consent",
           communication: "Communication preferences",
         };
-  const save = async () => {
-    setSaved(true);
-    const sb = createClient();
-    if (sb) {
-      const {
-        data: { user },
-      } = await sb.auth.getUser();
-      if (user)
-        await sb
-          .from("learner_profiles")
-          .update({ profile_visibility: visibility, preferred_language: lang })
-          .eq("user_id", user.id);
-    }
-    setTimeout(() => setSaved(false), 2200);
-  };
   return (
     <main className="set-shell">
       <header>
@@ -171,10 +162,19 @@ export default function SettingsPage() {
               <h1>{c.title}</h1>
               <span>{c.sub}</span>
             </div>
-            <button onClick={save}>
-              {saved ? <Check /> : null}
-              {saved ? "Saved" : "Save changes"}
-            </button>
+            <form action="/api/account" method="post">
+              <input type="hidden" name="displayName" value={displayName}/>
+              <input type="hidden" name="preferredLanguage" value={lang}/>
+              <input type="hidden" name="profileVisibility" value={visibility}/>
+              <input type="hidden" name="emailEnabled" value={String(email)}/>
+              <input type="hidden" name="interviewReminders" value={String(interviews)}/>
+              <input type="hidden" name="weeklySummary" value={String(weekly)}/>
+              <input type="hidden" name="quietHoursStart" value={quietStart}/>
+              <input type="hidden" name="quietHoursEnd" value={quietEnd}/>
+              <button type="submit" disabled={loading||displayName.trim().length<2}>
+                <Check />Save changes
+              </button>
+            </form>
           </div>
           <div className="set-grid">
             <article id="s0">
@@ -188,13 +188,13 @@ export default function SettingsPage() {
               <div className="fields">
                 <label>
                   Display name
-                  <input defaultValue="Aarav Sharma" />
+                  <input value={displayName} onChange={(event)=>setDisplayName(event.target.value)} placeholder="Your display name" />
                 </label>
                 <label>
                   Account email
                   <span className="locked">
                     <Mail />
-                    aarav@example.com
+                    {accountEmail||"Loading account email…"}
                     <LockKeyhole />
                   </span>
                 </label>
@@ -304,9 +304,9 @@ export default function SettingsPage() {
               <label className="quiet">
                 Quiet hours{" "}
                 <span>
-                  <input type="time" defaultValue="21:00" />
+                  <input type="time" value={quietStart} onChange={(event)=>setQuietStart(event.target.value)} />
                   to
-                  <input type="time" defaultValue="08:00" />
+                  <input type="time" value={quietEnd} onChange={(event)=>setQuietEnd(event.target.value)} />
                 </span>
               </label>
             </article>
@@ -321,23 +321,9 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </div>
-              <div className="org">
-                <i>
-                  <Building2 />
-                </i>
-                <p>
-                  <b>Government ITI Dehradun</b>
-                  <span>
-                    Education support · Learning, evidence and placement
-                  </span>
-                  <small>Expires 31 Dec 2026</small>
-                </p>
-                <button>Manage access</button>
-              </div>
               <div className="org-note">
                 <Users />
-                No employer currently has access to your identity or contact
-                information.
+                Organization relationships appear here only after a verified grant or invitation. No sample organization is shown.
               </div>
             </article>
             <article id="s4" className="data-card">
@@ -399,10 +385,8 @@ export default function SettingsPage() {
               <div className="security-ok">
                 <ShieldCheck />
                 <p>
-                  <b>No unusual sign-in activity detected.</b>
-                  <span>
-                    Last sign-in: Today · Chrome on Windows · Dehradun, India
-                  </span>
+                  <b>Session protected by Supabase authentication.</b>
+                  <span>Device and location claims are hidden until a verified session-audit feed is connected.</span>
                 </p>
               </div>
             </article>
@@ -420,6 +404,7 @@ export default function SettingsPage() {
               </span>
             </p>
           </div>
+          {saveError?<div className="rights-note" role="alert"><AlertTriangle/><p><b>Account data needs attention.</b><span>{saveError}</span></p></div>:null}
         </section>
       </div>
     </main>
