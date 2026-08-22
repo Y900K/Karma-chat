@@ -19,6 +19,18 @@ export class AuthError extends Error {
     this.status = status;
   }
 }
+function readUnverifiedSessionIdentity(accessToken: string) {
+  try {
+    const payload = JSON.parse(
+      Buffer.from(accessToken.split(".")[1], "base64url").toString("utf8"),
+    ) as { sub?: unknown; email?: unknown };
+    return typeof payload.sub === "string"
+      ? { id: payload.sub, email: typeof payload.email === "string" ? payload.email : null }
+      : null;
+  } catch {
+    return null;
+  }
+}
 export const getViewer = cache(async (): Promise<Viewer | null> => {
   const sb = await createClient();
   if (!sb) {
@@ -31,16 +43,14 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
       };
     return null;
   }
-  const { data, error } = await sb.auth.getClaims();
-  const claims = data?.claims;
-  let userId = !error && claims?.sub ? claims.sub : null;
-  let email = !error && typeof claims?.email === "string" ? claims.email : null;
-  if (!userId) {
-    const { data: sessionData, error: sessionError } = await sb.auth.getSession();
-    if (sessionError || !sessionData.session?.user.id) return null;
-    userId = sessionData.session.user.id;
-    email = sessionData.session.user.email ?? null;
-  }
+  const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+  const session = sessionData.session;
+  const identity = session ? readUnverifiedSessionIdentity(session.access_token) : null;
+  if (sessionError || !identity) return null;
+  const userId = identity.id;
+  const email = identity.email;
+  // The decoded cookie payload is not authorization. This RLS-protected query
+  // must validate its JWT and return only the matching auth.uid() account row.
   const { data: account, error: accountError } = await sb
     .from("user_accounts")
     .select("persona,status")

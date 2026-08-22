@@ -84,9 +84,9 @@ test("protected navigation avoids duplicate remote user lookups", async () => {
   const dal = await readFile(join(root, "src/lib/auth/dal.ts"), "utf8");
   assert.match(proxy, /sessionCookiePresent/);
   assert.match(proxy, /auth\.getClaims\(\)/);
-  assert.match(dal, /auth\.getClaims\(\)/);
   assert.match(dal, /auth\.getSession\(\)/);
   assert.match(dal, /accountError \|\| !account/);
+  assert.match(dal, /decoded cookie payload is not authorization/);
   assert.doesNotMatch(proxy, /auth\.getUser\(\)/);
   assert.doesNotMatch(dal, /auth\.getUser\(\)/);
 });
