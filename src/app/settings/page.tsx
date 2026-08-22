@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -71,7 +70,6 @@ function Toggle({ on, set, label, detail, purpose }: ToggleProps) {
   );
 }
 export default function SettingsPage() {
-  const router = useRouter();
   const [lang, setLang] = useState<"en" | "hi">("en"),
     [saved, setSaved] = useState(false),
     [visibility, setVisibility] = useState("matched_employers"),
@@ -109,12 +107,6 @@ export default function SettingsPage() {
           .eq("user_id", user.id);
     }
     setTimeout(() => setSaved(false), 2200);
-  };
-  const logout = async () => {
-    const sb = createClient();
-    if (sb) await sb.auth.signOut();
-    router.replace("/auth");
-    router.refresh();
   };
   return (
     <main className="set-shell">
@@ -164,10 +156,10 @@ export default function SettingsPage() {
               );
             })}
           </nav>
-          <button className="logout" onClick={logout}>
+          <Link className="logout" href="/auth/signout">
             <LogOut />
             Sign out
-          </button>
+          </Link>
         </aside>
         <section className="set-main">
           <div className="set-title">
