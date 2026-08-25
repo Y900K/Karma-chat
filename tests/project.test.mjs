@@ -14,11 +14,38 @@ const required = [
   "src/app/institute/authoring/page.tsx",
   "src/app/employer/hiring/page.tsx",
   "src/app/trust/page.tsx",
+  "src/app/api/trust/reports/route.ts",
   "src/proxy.ts",
 ];
 test("all critical product routes exist", async () => {
   for (const f of required)
     assert.ok((await stat(join(root, f))).isFile(), `${f} missing`);
+});
+
+test("public trust reporting verifies storage before showing success", async () => {
+  const page = await readFile(join(root, "src/app/trust/page.tsx"), "utf8");
+  const route = await readFile(join(root, "src/app/api/trust/reports/route.ts"), "utf8");
+  assert.match(page, /fetch\("\/api\/trust\/reports"/);
+  assert.match(page, /result\.referenceCode/);
+  assert.doesNotMatch(page, /KS-TRUST-2026-0821/);
+  assert.match(route, /consumeRateLimit/);
+  assert.match(route, /\.select\("reference_code"\)/);
+});
+
+test("public claims distinguish pilot scope from observed outcomes", async () => {
+  const page = await readFile(join(root, "src/app/trust/page.tsx"), "utf8");
+  assert.match(page, /Pilot scope and publication plan/);
+  assert.doesNotMatch(page, />3,665</);
+  assert.doesNotMatch(page, />511</);
+  assert.doesNotMatch(page, />86%</);
+});
+
+test("landing preview and mobile navigation expose accessible state", async () => {
+  const page = await readFile(join(root, "src/app/page.tsx"), "utf8");
+  assert.match(page, /ILLUSTRATIVE READINESS PREVIEW/);
+  assert.match(page, /aria-modal="true"/);
+  assert.match(page, /aria-expanded=\{menu\}/);
+  assert.match(page, /aria-controls="primary-navigation"/);
 });
 test("environment example contains placeholders, never deployed values", async () => {
   const env = await readFile(join(root, ".env.example"), "utf8");

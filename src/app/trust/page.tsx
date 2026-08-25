@@ -19,7 +19,6 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import "./trust.css";
 
 const principles = [
@@ -63,7 +62,9 @@ const partners = [
 ];
 export default function Trust() {
   const [lang, setLang] = useState<"en" | "hi">("en"),
-    [sent, setSent] = useState(false),
+    [reportStatus, setReportStatus] = useState<"idle" | "sending" | "sent" | "error">("idle"),
+    [reportReference, setReportReference] = useState(""),
+    [reportError, setReportError] = useState(""),
     [faq, setFaq] = useState<number | null>(0);
   const c =
     lang === "en"
@@ -79,19 +80,30 @@ export default function Trust() {
         };
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const f = new FormData(e.currentTarget),
-      sb = createClient();
-    if (sb)
-      await sb
-        .from("public_trust_reports")
-        .insert({
-          report_type: f.get("type"),
-          contact_email: f.get("email") || null,
+    const f = new FormData(e.currentTarget);
+    setReportStatus("sending");
+    setReportError("");
+    try {
+      const response = await fetch("/api/trust/reports", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          type: f.get("type"),
+          email: f.get("email") || "",
           summary: f.get("summary"),
-          preferred_language: lang,
-          consent_to_contact: Boolean(f.get("contact")),
-        });
-    setSent(true);
+          language: lang,
+          consentToContact: Boolean(f.get("contact")),
+        }),
+      });
+      const result = (await response.json()) as { referenceCode?: string; error?: string };
+      if (!response.ok || !result.referenceCode)
+        throw new Error(result.error || "Report could not be saved.");
+      setReportReference(result.referenceCode);
+      setReportStatus("sent");
+    } catch (error) {
+      setReportError(error instanceof Error ? error.message : "Report could not be saved.");
+      setReportStatus("error");
+    }
   };
   return (
     <main className="trust-shell">
@@ -227,29 +239,29 @@ export default function Trust() {
           <BarChart3 />
           <div>
             <p>PRIVACY-SAFE IMPACT</p>
-            <h2>How the pilot is progressing.</h2>
+            <h2>Pilot scope and publication plan.</h2>
           </div>
         </div>
         <div className="impact-cards">
           <div>
-            <b>3,665</b>
-            <span>Activated learners</span>
-            <small>Verified account + onboarding</small>
+            <b>200+</b>
+            <span>Current pilot learners</span>
+            <small>Program scope, not a placement claim</small>
           </div>
           <div>
-            <b>68%</b>
-            <span>Role readiness</span>
-            <small>Role-specific, v0.4.2</small>
+            <b>15</b>
+            <span>Target institutes</span>
+            <small>Controlled onboarding goal</small>
           </div>
           <div>
-            <b>511</b>
-            <span>Verified placements</span>
-            <small>Learner-confirmed joining</small>
+            <b>10</b>
+            <span>Target MSME partners</span>
+            <small>Verified onboarding goal</small>
           </div>
           <div>
-            <b>86%</b>
-            <span>90-day retention</span>
-            <small>Eligible follow-ups only</small>
+            <b>Monthly</b>
+            <span>Planned public release</span>
+            <small>Only after eligibility and privacy checks</small>
           </div>
         </div>
         <div className="methodology">
@@ -257,15 +269,15 @@ export default function Trust() {
           <p>
             <b>Methodology matters</b>
             <span>
-              Metrics suppress groups under 10, distinguish missing follow-up
-              from negative outcomes, and publish model/version changes. No
-              individual rankings appear here.
+              Outcome rates will appear only from approved public releases.
+              Small groups are suppressed, missing follow-up is separated from
+              negative outcomes, and no individual rankings appear here.
             </span>
           </p>
-          <button>
+          <Link href="/trust/outcomes">
             Read outcome methodology
             <ArrowRight />
-          </button>
+          </Link>
         </div>
       </section>
       <section className="partner-help">
@@ -291,10 +303,10 @@ export default function Trust() {
               <ShieldCheck />
             </div>
           ))}
-          <button>
+          <Link href="/trust/verification" className="verification-link">
             View verification standard
             <ArrowRight />
-          </button>
+          </Link>
         </article>
         <article id="help">
           <div className="section-head">
@@ -349,14 +361,14 @@ export default function Trust() {
             </p>
           </div>
         </div>
-        {sent ? (
+        {reportStatus === "sent" ? (
           <div className="report-sent">
             <CheckCircle2 />
             <h3>Report received.</h3>
             <p>
-              Reference: KS-TRUST-2026-0821. Save this number for follow-up.
+              Reference: {reportReference}. Save this number for follow-up.
             </p>
-            <button onClick={() => setSent(false)}>
+            <button onClick={() => { setReportStatus("idle"); setReportReference(""); }}>
               Submit another report
             </button>
           </div>
@@ -390,9 +402,10 @@ export default function Trust() {
               <input name="contact" type="checkbox" />
               KarmaSetu may contact me about this report.
             </label>
-            <button>
+            {reportStatus === "error" && <p className="report-error" role="alert">{reportError}</p>}
+            <button disabled={reportStatus === "sending"}>
               <Send />
-              Submit securely
+              {reportStatus === "sending" ? "Submitting securely…" : "Submit securely"}
             </button>
           </form>
         )}

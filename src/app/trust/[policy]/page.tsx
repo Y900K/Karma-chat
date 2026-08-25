@@ -44,6 +44,26 @@ const policies = {
       ["Aggregated pilot metrics", "Privacy-safe aggregate outcomes may be kept for longitudinal evaluation. Small groups are suppressed and individual records are not published."],
     ],
   },
+  outcomes: {
+    title: "Outcome methodology",
+    summary: "How pilot outcomes will be checked, aggregated and published without overstating evidence.",
+    sections: [
+      ["Publication gate", "KarmaSetu publishes an outcome only after the metric definition, eligible population, measurement window and source are approved. Targets and current scope are always labelled separately from observed outcomes."],
+      ["Denominators and follow-up", "Every rate states its denominator. Learners who could not be reached are reported as missing follow-up, not silently counted as successful or unsuccessful."],
+      ["Privacy protection", "Groups smaller than 10 are suppressed. Public releases contain aggregates only and never expose a learner, employer or institute record."],
+      ["Versioning and correction", "Each release records its period and method version. Material corrections remain traceable and replace—not silently rewrite—the earlier display."],
+    ],
+  },
+  verification: {
+    title: "Partner verification standard",
+    summary: "The minimum checks required before an institute, employer or government program receives partner access.",
+    sections: [
+      ["Organization identity", "Verify the legal or public identity, official domain and operating location using authoritative records or an accountable program owner."],
+      ["Authorized representative", "Confirm that the invited administrator or recruiter is authorized to act for the organization. Shared public email accounts do not receive privileged access by default."],
+      ["Purpose and scope", "Record the approved program, learner cohort, hiring purpose, geography and access expiry. Data outside that scope remains unavailable."],
+      ["Ongoing assurance", "Reverify material changes, review suspicious access, expire inactive invitations and remove access when the approved relationship ends."],
+    ],
+  },
 } as const;
 
 export function generateStaticParams() {

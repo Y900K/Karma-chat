@@ -234,6 +234,12 @@ function AuthModal({
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
     [showPassword, setShowPassword] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && close();
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, close]);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -283,6 +289,10 @@ function AuthModal({
         >
           <motion.div
             className="auth-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
+            aria-describedby="auth-modal-description"
             initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18 }}
@@ -295,7 +305,7 @@ function AuthModal({
               <LockKeyhole size={14} />{" "}
               {mode === "login" ? "SECURE ACCESS" : "CREATE YOUR PROFILE"}
             </p>
-            <h2>
+            <h2 id="auth-modal-title">
               {mode === "login"
                 ? tx(
                     {
@@ -312,7 +322,7 @@ function AuthModal({
                     lang,
                   )}
             </h2>
-            <p>
+            <p id="auth-modal-description">
               {tx(
                 {
                   en: "One profile for assessment, learning, interviews and opportunities.",
@@ -367,7 +377,7 @@ function AuthModal({
                 <ArrowRight size={18} />
               </button>
             </form>
-            {message && <div className="form-message">{message}</div>}
+            {message && <div className="form-message" role="status" aria-live="polite">{message}</div>}
             <button
               className="text-button"
               onClick={() => setMode(mode === "login" ? "signup" : "login")}
@@ -395,9 +405,39 @@ function AuthModal({
   );
 }
 
+function ReadinessPreview({ close, createProfile }: { close: () => void; createProfile: () => void }) {
+  const dimensions = [
+    ["Technical knowledge", 72],
+    ["Practical evidence", 58],
+    ["Communication", 64],
+    ["Interview readiness", 51],
+  ] as const;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && close();
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [close]);
+  return (
+    <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && close()}>
+      <section className="readiness-preview" role="dialog" aria-modal="true" aria-labelledby="preview-title" aria-describedby="preview-note">
+        <button className="modal-close" onClick={close} aria-label="Close readiness preview"><X /></button>
+        <p className="eyebrow">ILLUSTRATIVE READINESS PREVIEW</p>
+        <h2 id="preview-title">See how your evidence becomes a clear next step.</h2>
+        <div className="preview-score"><b>61</b><span>/100 example score</span></div>
+        <div className="preview-dimensions">
+          {dimensions.map(([label, value]) => <div key={label}><span>{label}<b>{value}</b></span><i><em style={{ width: `${value}%` }} /></i></div>)}
+        </div>
+        <p id="preview-note">This is an example—not your assessment. Your real JobReady Index is built from a diagnostic, dated learning activity and verified evidence.</p>
+        <button className="primary wide" onClick={createProfile}>Create my real Skill Graph <ArrowRight size={18} /></button>
+      </section>
+    </div>
+  );
+}
+
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en"),
     [auth, setAuth] = useState(false),
+    [preview, setPreview] = useState(false),
     [menu, setMenu] = useState(false);
   return (
     <main>
@@ -409,25 +449,27 @@ export default function Home() {
             <small>कौशल से करियर तक</small>
           </span>
         </a>
-        <div className={`nav-links ${menu ? "open" : ""}`}>
-          <a href="#journey">How it works</a>
-          <a href="#ecosystem">For everyone</a>
-          <a href="#intelligence">AI intelligence</a>
+        <div className={`nav-links ${menu ? "open" : ""}`} id="primary-navigation">
+          <a href="#journey" onClick={() => setMenu(false)}>How it works</a>
+          <a href="#ecosystem" onClick={() => setMenu(false)}>For everyone</a>
+          <a href="#intelligence" onClick={() => setMenu(false)}>AI intelligence</a>
           <button
             className="language"
-            onClick={() => setLang(lang === "en" ? "hi" : "en")}
+            onClick={() => { setLang(lang === "en" ? "hi" : "en"); setMenu(false); }}
           >
             <Languages size={17} />{" "}
             {lang === "en" ? "हिंदी + EN" : "EN + हिंदी"}
           </button>
-          <button className="nav-cta" onClick={() => setAuth(true)}>
+          <button className="nav-cta" onClick={() => { setAuth(true); setMenu(false); }}>
             Sign in <ArrowRight size={16} />
           </button>
         </div>
         <button
           className="menu"
           onClick={() => setMenu(!menu)}
-          aria-label="Menu"
+          aria-label={menu ? "Close menu" : "Open menu"}
+          aria-expanded={menu}
+          aria-controls="primary-navigation"
         >
           {menu ? <X /> : <Menu />}
         </button>
@@ -627,7 +669,7 @@ export default function Home() {
               <CheckCircle2 /> Consent-led visibility for employers
             </li>
           </ul>
-          <button className="secondary" onClick={() => setAuth(true)}>
+          <button className="secondary" onClick={() => setPreview(true)}>
             Preview my readiness <ArrowRight size={18} />
           </button>
         </div>
@@ -756,6 +798,7 @@ export default function Home() {
         <small>© 2026 KarmaSetu AI · <Link href="/trust#ai">Responsible AI</Link> · <Link href="/trust#privacy">Privacy by design</Link></small>
       </footer>
       <AuthModal open={auth} close={() => setAuth(false)} lang={lang} />
+      {preview && <ReadinessPreview close={() => setPreview(false)} createProfile={() => { setPreview(false); setAuth(true); }} />}
     </main>
   );
 }

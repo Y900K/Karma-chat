@@ -4,3 +4,8 @@
 
 .document-grid article > .policy-link{width:100%;display:flex;align-items:center;border-top:1px solid #edf2f1;background:white;padding:13px 2px;text-align:left;margin:0;color:#10283b;font-weight:400}
 .document-grid .policy-link p{margin:0;flex:1}.document-grid .policy-link b,.document-grid .policy-link span{display:block;font-size:10px}.document-grid .policy-link span{color:#7b8e93;margin-top:4px}.document-grid .policy-link svg{width:14px}
+
+.methodology>a{color:#168d82;font-size:9px;font-weight:700;display:flex;align-items:center;gap:4px;text-decoration:none}.methodology>a svg{width:12px}
+.partner-help article>.verification-link{color:#178e84;font-size:9px;font-weight:700;display:flex;gap:4px;align-items:center;margin-top:8px;text-decoration:none}.partner-help .verification-link svg{width:12px}
+.report form>button:disabled{opacity:.65;cursor:wait}.report-error{margin:0;background:#fff0f0;border:1px solid #efbcbc;color:#9c2525;border-radius:8px;padding:9px;font-size:9px;line-height:1.45}
+@media(max-width:520px){.methodology>a{display:none}}
