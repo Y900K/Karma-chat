@@ -15,7 +15,14 @@ if (!url || !key || !publicKey) throw new Error('Supabase audit credentials are 
 const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 const tag = 'ks-audit-20260821';
 const personas = ['learner', 'institute', 'employer', 'government', 'admin'];
-const passwords = Object.fromEntries(personas.map((persona) => [persona, `Karma-${persona}-${randomBytes(12).toString('base64url')}!A1`]));
+const suppliedPasswords = process.env.AUDIT_PASSWORDS_JSON ? JSON.parse(process.env.AUDIT_PASSWORDS_JSON) : null;
+if (suppliedPasswords) {
+  for (const persona of personas) {
+    if (typeof suppliedPasswords[persona] !== 'string' || suppliedPasswords[persona].length < 12)
+      throw new Error(`AUDIT_PASSWORDS_JSON is missing a valid ${persona} password`);
+  }
+}
+const passwords = suppliedPasswords ?? Object.fromEntries(personas.map((persona) => [persona, `Karma-${persona}-${randomBytes(12).toString('base64url')}!A1`]));
 const emails = Object.fromEntries(personas.map((persona) => [persona, `${tag}-${persona}@example.com`]));
 
 function must(result, context) {
@@ -173,7 +180,12 @@ async function seed() {
     verification[persona] = { authenticated: true, persona: account.persona, membership: membershipTable ? 'active' : 'not_required' };
     await client.auth.signOut();
   }
-  console.log(JSON.stringify({ ok: true, mode: 'seed', credentials: Object.fromEntries(personas.map((persona) => [persona, { email: emails[persona], password: passwords[persona] }])), verification }));
+  console.log(JSON.stringify({
+    ok: true,
+    mode: 'seed',
+    accounts: Object.fromEntries(personas.map((persona) => [persona, { email: emails[persona], password: suppliedPasswords ? 'supplied-by-operator' : passwords[persona] }])),
+    verification,
+  }));
 }
 
 if (mode === 'seed') await seed();
