@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { AuthError, requirePersona } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { readBoundedJson } from "@/lib/bounded-json";
 
 const headers = { "cache-control": "private, no-store" };
 
@@ -104,10 +105,16 @@ async function updateSettings(request: NextRequest, raw: unknown) {
 }
 
 export async function PATCH(request: NextRequest) {
-  return updateSettings(request, await request.json());
+  if (Number(request.headers.get("content-length") || 0) > 16_384)
+    return json({ error: "Request is too large" }, 413);
+  const body=await readBoundedJson(request,16384);
+  if(!body.ok)return json({error:body.error},body.status);
+  return updateSettings(request, body.value);
 }
 
 export async function POST(request: NextRequest) {
+  if (Number(request.headers.get("content-length") || 0) > 16_384)
+    return json({ error: "Request is too large" }, 413);
   const form = await request.formData();
   const result = await updateSettings(request, {
     displayName: form.get("displayName"),

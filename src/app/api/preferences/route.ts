@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { AuthError, requireViewer } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
+import { readBoundedJson } from "@/lib/bounded-json";
 
 const inputSchema=z.object({language:z.enum(["en","hi"])}).strict();
 const headers={"cache-control":"private, no-store"};
@@ -23,8 +24,11 @@ export async function GET(){
 
 export async function PATCH(request:NextRequest){
   try{
+    if(Number(request.headers.get("content-length")||0)>4096)return NextResponse.json({error:"Request is too large"},{status:413,headers});
     const viewer=await requireViewer();
-    const input=inputSchema.parse(await request.json());
+    const body=await readBoundedJson(request,4096);
+    if(!body.ok)return NextResponse.json({error:body.error},{status:body.status,headers});
+    const input=inputSchema.parse(body.value);
     if(viewer.demo)return NextResponse.json({ok:true,language:input.language},{headers});
     const supabase=await createClient();
     if(!supabase)return NextResponse.json({error:"Preferences are unavailable"},{status:503,headers});

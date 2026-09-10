@@ -158,12 +158,49 @@
   color: inherit;
   text-decoration: none;
 }
+.inst-shell,
+.emp-shell,
+.gov-shell,
+.adm-shell {
+  overflow: clip;
+}
 .inst-shell > aside,
 .emp-shell > aside,
 .gov-shell > aside,
 .adm-shell > aside {
+  align-self: start;
+  height: 100vh;
+  min-height: 0;
   max-height: 100vh;
   overflow-y: auto;
+}
+.workspace-mobile-nav {
+  display: none;
+}
+.workspace-sample-disclosure {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 20px;
+  padding: 13px 15px;
+  border: 1px solid #efd891;
+  border-radius: 12px;
+  background: #fff8df;
+  color: #675515;
+}
+.workspace-sample-disclosure svg {
+  width: 18px;
+  flex: none;
+}
+.workspace-sample-disclosure b,
+.workspace-sample-disclosure span {
+  display: block;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.workspace-sample-disclosure span {
+  margin-top: 3px;
+  color: #786a38;
 }
 .inst-content [id],
 .emp-content [id],
@@ -209,5 +246,58 @@
   .company > svg:last-child,
   .program > svg:last-child {
     display: none;
+  }
+}
+@media (max-width: 720px) {
+  .inst-shell.pilot-live > aside,
+  .emp-shell.pilot-live > aside,
+  .gov-shell.pilot-live > aside,
+  .adm-shell.pilot-live > aside {
+    display: none !important;
+  }
+  .workspace-mobile-nav {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    margin: -20px -14px 20px;
+    border-bottom: 1px solid #dce6e4;
+    background: #fff;
+    box-shadow: 0 5px 18px #173c4614;
+  }
+  .workspace-mobile-nav > button {
+    width: 100%;
+    border: 0;
+    background: #fff;
+    color: #173448;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 800;
+  }
+  .workspace-mobile-nav svg {
+    width: 18px;
+  }
+  .workspace-mobile-nav nav {
+    position: static;
+    height: auto;
+    width: auto;
+    color: inherit;
+    border: 0;
+    padding: 0 12px 12px;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .workspace-mobile-nav nav:not([hidden]) {
+    display: grid;
+  }
+  .workspace-mobile-nav nav a {
+    border: 1px solid #dce6e4;
+    border-radius: 8px;
+    padding: 10px;
+    color: #173448;
+    text-decoration: none;
+    font-size: 11px;
   }
 }

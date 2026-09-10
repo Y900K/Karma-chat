@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, LogOut, Search } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, LogOut, Menu, Search, X } from "lucide-react";
 import "./workspace-utilities.css";
 
 export function WorkspaceSearch({
@@ -38,9 +38,8 @@ export function WorkspaceSearch({
     const match = Object.entries(targets).find(([keywords]) =>
       keywords.split("|").some((keyword) => query.includes(keyword)),
     );
-    const target = document.getElementById(
-      match?.[1] ?? Object.values(targets)[0],
-    );
+    if (!match) return;
+    const target = document.getElementById(match[1]);
     if (!target) return;
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     router.push(
@@ -164,6 +163,36 @@ export function WorkspaceSectionLink({
     >
       {children}
     </a>
+  );
+}
+
+export function WorkspaceMobileNav({
+  sections,
+}: {
+  sections: ReadonlyArray<{ href: string; label: string }>;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="workspace-mobile-nav">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="workspace-mobile-links"
+        onClick={() => setOpen((value) => !value)}
+      >
+        {open ? <X /> : <Menu />}
+        {open ? "Close workspace navigation" : "Navigate workspace"}
+      </button>
+      <nav id="workspace-mobile-links" hidden={!open} aria-label="Workspace sections">
+        {sections.map((section) => (
+          <a href={section.href} key={section.href} onClick={() => setOpen(false)}>
+            {section.label}
+          </a>
+        ))}
+        <Link href="/workspace/notifications" onClick={() => setOpen(false)}>Notifications</Link>
+        <Link href="/workspace/settings" onClick={() => setOpen(false)}>Workspace settings</Link>
+      </nav>
+    </div>
   );
 }
 

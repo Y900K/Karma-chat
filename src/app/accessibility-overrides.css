@@ -1,0 +1,14 @@
+/* Public-page contrast corrections measured with Axe against rendered content. */
+.story .eyebrow,#story>.eyebrow,#journey .eyebrow,.center>.eyebrow,.learning-copy>.eyebrow{color:#176e66!important}
+.intel-copy>.eyebrow{color:#65d8cd!important}
+main>footer>small{color:#9ab2bc}
+.trust-shell .document-grid .policy-link span{color:#425f68}
+.trust-shell .partner-help article>a[href^="mailto:"]{color:#116b63}
+.auth-shell .secure,.auth-shell .forgot,.auth-shell .auth-switch button{color:#116c63}
+.auth-shell .auth-switch p,.auth-shell .legal,.auth-shell .auth-card>p{color:#475f68}
+.auth-shell .secure,.auth-shell .legal,.auth-shell .auth-switch p,.auth-shell .forgot{font-size:12px}
+.trust-shell .trust-hero>div>a,.trust-shell .report form>button,.trust-shell .report-sent button{background:#106e65;color:#fff}
+.trust-shell .principles article>p,.trust-shell .policy-link span,.trust-shell .does ul,.trust-shell .impact-cards small,.trust-shell .methodology span,.trust-shell .trust-partner span,.trust-shell .faq p{color:#425f68}
+.trust-shell .document-grid .section-head p,.trust-shell .impact .section-head p,.trust-shell .partner-help .section-head p,.trust-shell .methodology>a,.trust-shell .partner-help article>.verification-link,.trust-shell .document-grid article>a:not(.policy-link){color:#116b63}
+.trust-shell .principles article>p,.trust-shell .policy-link span,.trust-shell .does ul,.trust-shell .impact-cards small,.trust-shell .faq p{font-size:12px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

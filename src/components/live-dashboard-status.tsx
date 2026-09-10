@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DatabaseZap, RefreshCw } from "lucide-react";
 import styles from "./live-dashboard-status.module.css";
 
@@ -38,15 +38,18 @@ const labels: Record<string, string> = {
   productionPrompts: "Production prompts",
 };
 
-export default function LiveDashboardStatus({ scope }: { scope: DashboardScope }) {
+export default function LiveDashboardStatus({ scope, organizationId }: { scope: DashboardScope; organizationId?:string }) {
   const [payload, setPayload] = useState<DashboardPayload | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const inFlight = useRef(false);
 
   const load = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setLoading(true);
     try {
-      const response = await fetch(`/api/dashboard?scope=${scope}`, { cache: "no-store" });
+      const response = await fetch(`/api/dashboard?scope=${scope}${organizationId?`&organizationId=${encodeURIComponent(organizationId)}`:""}`, { cache: "no-store" });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Live data could not be loaded");
       setPayload(body);
@@ -54,13 +57,16 @@ export default function LiveDashboardStatus({ scope }: { scope: DashboardScope }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Live data could not be loaded");
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
-  }, [scope]);
+  }, [scope,organizationId]);
 
   useEffect(() => {
     const initial = window.setTimeout(() => void load(), 0);
-    const timer = window.setInterval(() => void load(), 30_000);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 60_000);
     const onVisible = () => document.visibilityState === "visible" && void load();
     document.addEventListener("visibilitychange", onVisible);
     return () => {

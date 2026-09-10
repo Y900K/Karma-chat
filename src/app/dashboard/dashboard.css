@@ -734,8 +734,7 @@
     font-size: 0;
   }
   .side-nav em,
-  .side-bottom,
-  .dash-search {
+  .side-bottom {
     display: none;
   }
   .dash-main {
@@ -756,8 +755,20 @@
     grid-column: auto;
   }
   .dash-top {
-    padding: 0 16px;
+    padding: 12px 16px;
     gap: 8px;
+    height: auto;
+    flex-wrap: wrap;
+  }
+  .dash-search {
+    display: flex;
+    order: 5;
+    flex: 0 0 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  .dash-search input {
+    min-width: 0;
   }
   .mobile-brand,
   .mobile-avatar {

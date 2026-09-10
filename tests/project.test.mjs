@@ -80,6 +80,25 @@ test("every migration that creates tables enables row level security", async () 
   }
 });
 
+test("public RLS policies never require the privileged staff helper", async () => {
+  const migration = await readFile(
+    join(root, "supabase/migrations/032_public_rls_policy_separation.sql"),
+    "utf8",
+  );
+  for (const table of [
+    "external_resources",
+    "public_metric_releases",
+    "public_policy_versions",
+    "locale_content_packs",
+    "metric_definitions",
+    "regions",
+    "taxonomy_versions",
+    "taxonomy_terms",
+  ]) assert.match(migration, new RegExp(`on public\\.${table}`));
+  assert.match(migration, /staff manage resources" on public\.external_resources\s+for all to authenticated/);
+  assert.match(migration, /revoke all on function public\.is_platform_staff\(\) from public, anon/);
+});
+
 test("public signup cannot self-assign a privileged persona", async () => {
   const auth = await readFile(join(root, "src/app/auth/page.tsx"), "utf8");
   assert.match(auth, /data:\s*\{\s*persona:\s*"learner"\s*\}/);
@@ -142,12 +161,28 @@ test("every non-learner workspace exposes real shared controls and visible secti
       join(root, `src/app/${route}/page.tsx`),
       "utf8",
     );
-    assert.match(page, /WorkspaceSearch/);
-    assert.match(page, /WorkspaceSignOut/);
-    assert.match(page, /href="\/workspace\/settings"/);
-    assert.match(page, /href="\/workspace\/notifications"/);
+    assert.match(page, /RoleWorkspace/);
+    const shared=await readFile(join(root,"src/components/role-workspace.tsx"),"utf8");
+    assert.match(shared, /WorkspaceSignOut/);
+    assert.match(shared, /href="\/workspace\/settings"/);
+    assert.match(shared, /href="\/workspace\/notifications"/);
     assert.doesNotMatch(page, /href="#settings"/);
   }
+});
+
+test("role workspaces use live records and expose mobile navigation", async () => {
+  const utilities = await readFile(join(root, "src/components/workspace-utilities.tsx"), "utf8");
+  const utilityCss = await readFile(join(root, "src/components/workspace-utilities.css"), "utf8");
+  assert.match(utilities, /function WorkspaceMobileNav/);
+  assert.match(utilityCss, /height:\s*100vh/);
+  for (const route of ["institute", "employer", "governance", "admin"]) {
+    const page = await readFile(join(root, `src/app/${route}/page.tsx`), "utf8");
+    assert.match(page, /RoleWorkspace/);
+  }
+  const shared=await readFile(join(root,"src/components/role-workspace.tsx"),"utf8");
+  assert.match(shared,/WorkspaceMobileNav/);
+  assert.match(shared,/\/api\/workspace/);
+  assert.match(shared,/No records match/);
 });
 
 test("shared workspace routes and preferences are authenticated", async () => {
@@ -348,7 +383,7 @@ test("workspace navigation has unique destinations and learner escape routes", a
       join(root, `src/app/${route}/page.tsx`),
       "utf8",
     );
-    assert.match(page, /WorkspaceSectionLink/);
+    assert.match(page, /RoleWorkspace/);
     const targets = [
       ...page.matchAll(/\[[A-Za-z0-9]+,\s*"[^"]+",\s*"([^"]+)"\]/g),
     ].map((match) => match[1]);

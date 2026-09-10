@@ -10,7 +10,6 @@ import {
   BookOpen,
   BrainCircuit,
   BriefcaseBusiness,
-  Check,
   ChevronRight,
   CircleUserRound,
   FileBadge2,
@@ -22,8 +21,6 @@ import {
   Search,
   Settings,
   Sparkles,
-  Trophy,
-  Upload,
   Zap,
 } from "lucide-react";
 import LiveDashboardStatus from "@/components/live-dashboard-status";
@@ -86,27 +83,8 @@ const content = {
   },
 };
 
-const dimensions = [
-  {
-    label: "Technical knowledge",
-    hi: "Technical knowledge",
-    value: 78,
-    tone: "teal",
-  },
-  {
-    label: "Practical evidence",
-    hi: "Practical evidence",
-    value: 68,
-    tone: "yellow",
-  },
-  { label: "Communication", hi: "Communication", value: 71, tone: "blue" },
-  {
-    label: "Interview readiness",
-    hi: "Interview readiness",
-    value: 74,
-    tone: "purple",
-  },
-];
+type Skill = { skill_slug: string; proficiency_score: number | null };
+type Match = { job_id: string; score: number; jobs: { title: string; location: unknown } | null };
 
 export default function Dashboard() {
   const router = useRouter();
@@ -119,6 +97,8 @@ export default function Dashboard() {
     semester: null as number | null,
   });
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [summary, setSummary] = useState<{readiness:number|null; completedLessons:number; pendingEvidence:number; skills:Skill[]; matches:Match[]}>({readiness:null,completedLessons:0,pendingEvidence:0,skills:[],matches:[]});
+  const [summaryError, setSummaryError] = useState("");
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
   const [aiStatus, setAiStatus] = useState<
@@ -140,12 +120,24 @@ export default function Dashboard() {
   };
   useEffect(() => {
     const controller = new AbortController();
+    let inFlight = false;
+    const refresh = () => {
+    if (inFlight || document.hidden) return;
+    inFlight = true;
     void fetch("/api/dashboard?scope=learner", {
       cache: "no-store",
       signal: controller.signal,
     })
-      .then((response) => (response.ok ? response.json() : null))
+      .then((response) => { if (!response.ok) throw new Error("Dashboard unavailable"); return response.json(); })
       .then((payload) => {
+        setSummaryError("");
+        if (payload?.data) setSummary({
+          readiness: payload.data.metrics?.readiness ?? null,
+          completedLessons: payload.data.metrics?.completedLessons ?? 0,
+          pendingEvidence: payload.data.metrics?.pendingEvidence ?? 0,
+          skills: payload.data.skills ?? [],
+          matches: payload.data.matches ?? [],
+        });
         if (payload?.data?.identity)
           setIdentity({
             displayName: String(payload.data.identity.displayName || "Learner"),
@@ -158,8 +150,13 @@ export default function Dashboard() {
         if (typeof payload?.data?.metrics?.unreadNotifications === "number")
           setUnreadNotifications(payload.data.metrics.unreadNotifications);
       })
-      .catch(() => undefined);
-    return () => controller.abort();
+      .catch(() => { if (!controller.signal.aborted) setSummaryError("Summary could not refresh. Previously loaded values may be outdated."); })
+      .finally(() => { inFlight = false; });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { controller.abort(); clearInterval(timer); document.removeEventListener("visibilitychange", refresh); };
   }, []);
   const askCoach = async () => {
     if (!query.trim()) return;
@@ -226,7 +223,7 @@ export default function Dashboard() {
             >
               <Icon />
               {c.nav[i]}
-              {i === 3 && <em>1</em>}
+              {i === 3 && summary.pendingEvidence > 0 && <em>{summary.pendingEvidence}</em>}
             </Link>
           ))}
         </nav>
@@ -288,7 +285,7 @@ export default function Dashboard() {
           <div className="welcome">
             <div>
               <p className="dash-eyebrow">
-                <Sparkles /> {c.active}
+                <Sparkles /> {lang === "en" ? "Your learning workspace" : "आपका learning workspace"}
               </p>
               <h1>
                 {lang === "en"
@@ -298,97 +295,80 @@ export default function Dashboard() {
               <p>{c.sub}</p>
             </div>
             <div className="week-stat">
-              <small>{c.weekly}</small>
-              <b>+6</b>
-              <span>readiness points</span>
+              <small>{lang === "en" ? "Completed lessons" : "पूरे किए lessons"}</small>
+              <b>{summary.completedLessons}</b>
+              <span>Recorded learning progress</span>
             </div>
           </div>
           <LiveDashboardStatus scope="learner" />
+          {summaryError && <p role="alert">{summaryError}</p>}
           <article className="next-action">
             <div className="next-icon">
-              <Upload />
+              <BookOpen />
             </div>
             <div className="next-copy">
               <p>{c.next}</p>
-              <h2>{c.lesson}</h2>
-              <span>{c.lessonSub}</span>
+              <h2>{lang === "en" ? "Continue approved learning" : "Approved learning जारी रखें"}</h2>
+              <span>{lang === "en" ? "Review your learning path and choose the next available lesson." : "अपना learning path देखें और अगला available lesson चुनें।"}</span>
             </div>
             <Link href="/learn">
               Continue learning
               <ArrowRight />
             </Link>
-            <div className="action-progress">
-              <span />
-            </div>
+
           </article>
           <div className="dashboard-grid">
             <article className="readiness-card">
               <div className="card-head">
                 <div>
-                  <p className="dash-label">{c.readiness}</p>
-                  <h3>{c.match}</h3>
+                  <p className="dash-label">Recent skill summary</p>
+                  <h3>{lang === "en" ? "Recorded skill signals" : "दर्ज किए skill signals"}</h3>
                 </div>
                 <Link href="/portfolio">
-                  {c.explanation}
+                  View evidence
                   <ChevronRight />
                 </Link>
               </div>
               <div className="readiness-body">
-                <div className="score-ring">
+                <div className="score-ring" style={{background: `conic-gradient(#1eb5a8 ${(summary.readiness ?? 0) * 3.6}deg, #e5eeeb 0deg)`}}>
                   <div>
-                    <b>72</b>
+                    <b>{summary.readiness ?? "—"}</b>
                     <span>/100</span>
                   </div>
                 </div>
                 <div className="dimensions">
-                  {dimensions.map((d) => (
-                    <div key={d.label}>
+                  {summary.skills.map((d, i) => (
+                    <div key={d.skill_slug}>
                       <div>
-                        <span>{lang === "en" ? d.label : d.hi}</span>
-                        <b>{d.value}</b>
+                        <span>{d.skill_slug.replaceAll("-", " ")}</span>
+                        <b>{d.proficiency_score ?? "—"}</b>
                       </div>
-                      <div className={`bar ${d.tone}`}>
-                        <span style={{ width: `${d.value}%` }} />
+                      <div className={`bar ${["teal","yellow","blue","purple"][i % 4]}`}>
+                        <span style={{ width: `${Math.max(0, Math.min(100, d.proficiency_score ?? 0))}%` }} />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="transparent-note">
-                <Zap /> Based on 4 verified signals · Updated today
+                <Zap /> Average of up to 12 recent skill scores; latest assessment used if no skills exist. Not a hiring decision.
               </div>
             </article>
             <article className="journey-card">
               <div className="card-head">
                 <div>
                   <p className="dash-label">{c.journey}</p>
-                  <h3>Industrial Electrician</h3>
+                  <h3>{identity.trade}</h3>
                 </div>
-                <span className="path-percent">64%</span>
               </div>
               <div className="path-list">
                 {[
-                  ["Baseline diagnostic", "Completed · 12 Aug", true],
-                  ["Safety foundations", "4 of 4 units", true],
-                  ["Electrical drawings", "3 of 4 units", false],
-                  ["Practical evidence", "1 project required", false],
-                  ["AI mock interview", "Unlocks next", false],
-                ].map((x, i) => (
-                  <div
-                    className={x[2] ? "done" : i === 2 ? "current" : ""}
-                    key={String(x[0])}
-                  >
-                    <span className="path-dot">{x[2] ? <Check /> : i + 1}</span>
-                    <p>
-                      <b>{x[0]}</b>
-                      <small>{x[1]}</small>
-                    </p>
-                    {i === 2 && (
-                      <Link href="/learn">
-                        <Play /> Continue
-                      </Link>
-                    )}
-                  </div>
+                  ["Skill evidence", "/portfolio"],
+                  ["Approved lessons", "/learn"],
+                  ["Practical evidence", "/evidence"],
+                  ["AI practice interview", "/interview"],
+                ].map(([label, href], i) => (
+                  <div key={href}><span className="path-dot">{i + 1}</span><p><b>{label}</b><small>Open your current records</small></p><Link href={href}><Play /> Open</Link></div>
                 ))}
               </div>
             </article>
@@ -400,36 +380,14 @@ export default function Dashboard() {
                 </div>
                 <Link href="/opportunities">View all</Link>
               </div>
-              {[
-                {
-                  role: "Junior Electrical Technician",
-                  company: "Apex Motion Systems",
-                  place: "Noida · ₹18–22K",
-                  match: 86,
-                },
-                {
-                  role: "Maintenance Apprentice",
-                  company: "Shivam Components",
-                  place: "Haridwar · ₹14–17K",
-                  match: 79,
-                },
-              ].map((job) => (
-                <div className="job" key={job.role}>
-                  <div className="company-mark">{job.company[0]}</div>
-                  <div>
-                    <b>{job.role}</b>
-                    <span>{job.company}</span>
-                    <small>{job.place}</small>
-                  </div>
-                  <strong>
-                    {job.match}%<small>match</small>
-                  </strong>
+              {summary.matches.length === 0 && <p>No opportunity matches have been recorded yet. Explore published roles to get started.</p>}
+              {summary.matches.map((job) => (
+                <div className="job" key={job.job_id}>
+                  <div className="company-mark"><BriefcaseBusiness /></div>
+                  <div><b>{job.jobs?.title ?? "Unavailable listing"}</b><small>{typeof job.jobs?.location === "string" ? job.jobs.location : "See listing for location"}</small></div>
+                  <strong>{job.score}<small>recorded score</small></strong>
                 </div>
               ))}
-              <div className="unlock-note">
-                <Trophy /> Add practical evidence to unlock 7 more relevant
-                roles.
-              </div>
             </article>
             <article className="coach-card">
               <div className="coach-head">
@@ -453,8 +411,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <p>
-                “Your practical score is the fastest route to a stronger match.
-                Want a 20-minute plan for today?”
+                Ask for a learning plan or help understanding a skill. Coaching is guidance, not a verified assessment or hiring decision.
               </p>
               {answer && (
                 <div className={`coach-answer ${aiStatus}`}>
@@ -473,7 +430,7 @@ export default function Dashboard() {
                   onKeyDown={(e) => e.key === "Enter" && askCoach()}
                   placeholder={c.placeholder}
                 />
-                <button onClick={askCoach} disabled={busy}>
+                <button onClick={askCoach} disabled={busy} aria-label="Ask Karma AI coach">
                   {busy ? "…" : <ArrowRight />}
                 </button>
               </div>

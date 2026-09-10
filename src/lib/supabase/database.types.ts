@@ -3899,6 +3899,7 @@ export type Database={public:{Tables:{
         Relationships: []
       }
     };Views:Record<string,never>;Functions:{
+      "dashboard_metric_totals": { Args: { p_scope: string; p_organization_id?: string | null }; Returns: Json }
       "accept_organization_invitation": { Args: {
           "p_token": string
         }; Returns: Json }

@@ -5,6 +5,14 @@ export type ChatMessage = {
   content: string;
 };
 const endpoint = "https://integrate.api.nvidia.com/v1";
+export const DEFAULT_INTERACTIVE_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b";
+export function interactiveModel(configured = process.env.NVIDIA_INTERACTIVE_MODEL) {
+  // NVIDIA retired this previously deployed model on 2026-08-26. Resolve old
+  // deployment settings as well as unset values to the verified replacement.
+  return !configured || configured === "meta/llama-3.1-8b-instruct"
+    ? DEFAULT_INTERACTIVE_MODEL
+    : configured;
+}
 function apiKey() {
   const key = process.env.NVIDIA_API_KEY;
   if (!key) throw new Error("AI service is not configured");
@@ -60,8 +68,11 @@ async function requestChat(input: {
       messages: input.messages,
       temperature: 0.2,
       top_p: 0.7,
-      max_tokens: 420,
+      max_tokens: 300,
       stream: false,
+      ...(input.model.startsWith("nvidia/nemotron-3.5-")
+        ? { chat_template_kwargs: { enable_thinking: false } }
+        : {}),
     }),
   });
 }
@@ -73,20 +84,18 @@ export async function createChatCompletion(input: {
 }) {
   // Interactive coaching must return inside a human conversation turn. Keep it
   // independent from larger background models used for offline evaluation.
-  const primary =
-    process.env.NVIDIA_INTERACTIVE_MODEL || "meta/llama-3.1-8b-instruct";
-  const fallback =
-    process.env.NVIDIA_FALLBACK_MODEL || "meta/llama-3.1-8b-instruct";
+  const primary = interactiveModel();
+  const fallback = interactiveModel(process.env.NVIDIA_FALLBACK_MODEL);
   try {
     const response = await requestChat({
       ...input,
       model: primary,
-      timeoutMs: 9_000,
+      timeoutMs: 15_000,
     });
     if (
       response.ok ||
       primary === fallback ||
-      ![429, 500, 502, 503, 504].includes(response.status)
+      ![404, 410, 429, 500, 502, 503, 504].includes(response.status)
     )
       return { response, model: primary, failedOver: false };
   } catch (error) {
