@@ -9,7 +9,7 @@ This supplements SENIOR_WEB_AUDIT_2026-09-09.md; the older report describes the 
 - Learner homepage no longer presents invented 72-point readiness, 64% pathway completion, weekly gains, streaks or fictional employers. Skill summary and opportunity matches come from the authenticated account. Skill summary is explicitly an average of up to 12 recent skill scores, falling back to the latest assessment—not a hiring decision.
 - Career registry reads published roles, supports persistent account bookmarks and comparison. An empty published registry is shown honestly. Older authoring/hiring studios explicitly state that their mutations are not enabled; simulated Save buttons were removed.
 - Public RLS policy corrections and dashboard-total SQL were applied through the authenticated Supabase editor. Anonymous public reads were checked; anonymous execution of staff and dashboard-total functions was rejected (42501).
-- Retired NVIDIA interactive model resolves to the tested replacement. Generation is bounded to 300 tokens with a 15-second primary deadline inside the route's 24-second provider budget. Timeout fallback remains explicitly labelled; provider availability is not guaranteed.
+- Retired NVIDIA interactive model resolves to the tested replacement. Generation is bounded to 160 tokens with explicit concise-answer and language instructions and a 15-second primary deadline inside the route's 24-second provider budget. Timeout fallback remains explicitly labelled; provider availability is not guaranteed.
 - Streamed JSON byte limits cover AI, events, preferences, account PATCH, vitals and role bookmarks. Failed analytics/audit persistence is no longer silently treated as success. Retrieval has an abort budget and reference data is labelled as data rather than instructions.
 - New background AI jobs trigger bounded post-response worker processing; the daily sweep remains a retry path.
 - Health checks now distinguish privileged database access, anonymous public-content access and AI configuration (not a successful AI probe).
@@ -33,6 +33,14 @@ This supplements SENIOR_WEB_AUDIT_2026-09-09.md; the older report describes the 
 6. Free AI provider capacity and queue retry cadence are not an SLA. Measure queue age and request latency; choose a supported frequent worker schedule and verified independent fallback before making turnaround guarantees.
 7. Rotate credentials previously shared in chat before external pilot access. Keep secrets in local/Vercel environment settings, never source control or public browser variables.
 
-## Suggested MCP integration
+## Publication verification update
+
+The main remediation was published from GitHub revision 653d794 to the existing production alias. Health returned 200 with database and anonymous public-content checks OK, and DENY/nosniff headers were verified. The first production browser run passed 19/22 checks: two desktop accessibility runs exceeded the 30-second test budget and Government records exceeded a five-second expectation. Desktop public scans passed on the isolated rerun; these timing failures must remain visible as latency evidence rather than being labelled product-wide success.
+
+The isolated desktop rerun passed all five checks, including Government navigation, without relaxing its five-second record-loading assertion. Across the main run and rerun, all 22 cases passed, though the original timing failures remain relevant.
+
+Initial live AI calls still timed out. Additional response-length and explicit-language constraints produced successful local app responses for both tasks in approximately 3.7 and 3.2 seconds, with Devanagari present in the Hindi response. This is a small availability sample, not a bilingual or safety evaluation certification.
+
+## Suggested MCP integration (next phase)
 
 Start with a read-only operations MCP exposing approved content search, deployment health, aggregate queue status and scoped audit summaries. Authenticate every call and enforce tenant membership server-side. Exclude credentials, raw learner evidence and unrestricted SQL. Add write tools only later with explicit approvals, idempotency and durable audit events; separate staging from production access.

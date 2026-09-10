@@ -182,8 +182,9 @@ export async function POST(request: NextRequest) {
         requestId,
         signal: controller.signal,
         messages: [
-          { role: "system", content: prompt.text + grounding },
+          { role: "system", content: prompt.text + grounding + `\nRespond in ${parsed.data.locale === "hi" ? "Hinglish, with Hindi words in Devanagari and English technical words in English" : "English"}. Keep the entire answer under 60 words, in two or three short points. Do not restate the question. Preserve safety caveats. Ask one clarifying question if essential context is missing.` },
           ...parsed.data.messages,
+          { role: "user", content: parsed.data.locale === "hi" ? "ऊपर के सवाल का छोटा जवाब दें: Hindi शब्द देवनागरी में और technical English words English में रखें। केवल 2 छोटे points, कुल 50 words से कम। ज़रूरी safety warning रखें।" : "Answer the preceding question in only two short points, under 50 words total. Preserve essential safety warnings." },
         ],
       });
       response = completion.response;

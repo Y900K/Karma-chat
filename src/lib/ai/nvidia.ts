@@ -68,7 +68,7 @@ async function requestChat(input: {
       messages: input.messages,
       temperature: 0.2,
       top_p: 0.7,
-      max_tokens: 300,
+      max_tokens: 160,
       stream: false,
       ...(input.model.startsWith("nvidia/nemotron-3.5-")
         ? { chat_template_kwargs: { enable_thinking: false } }
